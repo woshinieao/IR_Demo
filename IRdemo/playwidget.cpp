@@ -968,56 +968,63 @@ BYTE palette[] = {
 long FrameCallBack(long lData, long lParam)
 {
 	PlayWidget* pIRPlayer = (PlayWidget*)lParam;
-	emmit pIRPlayer->sigFrame((Frame *)lData);
+	emit pIRPlayer->sigFrame((Frame *)lData);
 	return 0;
 
 }
 
 FrameRcvThread::FrameRcvThread()
 {
-	
+	pFrame = NULL;
+
+	FrameHeader();
+	FramePalette(0);
 
 	
 }
 
+int FrameRcvThread::FrameHeader()
+{
+	m_FileInfoheader.bmpfileheader.bfType = ('M' << 8 | 'B');
+	m_FileInfoheader.bmpfileheader.bfSize = 54 + 256 * 4 + pFrame->width* pFrame->height;
+	m_FileInfoheader.bmpfileheader.bfReserved1 = 0;
+	m_FileInfoheader.bmpfileheader.bfReserved2 = 0;
+	m_FileInfoheader.bmpfileheader.bfOffBits = sizeof(BITMAPFILEHEADER) + BITMAPINFO_SIZE;
+	m_FileInfoheader.bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
+	m_FileInfoheader.bmiHeader.biWidth         = pFrame->width;
+	m_FileInfoheader.bmiHeader.biHeight        = -pFrame->height;
+	m_FileInfoheader.bmiHeader.biPlanes        = 1;
+	m_FileInfoheader.bmiHeader.biBitCount      = 8;
+	m_FileInfoheader.bmiHeader.biCompression   = 0;
+	m_FileInfoheader.bmiHeader.biSizeImage     = 0;
+	m_FileInfoheader.bmiHeader.biXPelsPerMeter = 0;
+	m_FileInfoheader.bmiHeader.biYPelsPerMeter = 0;
+	m_FileInfoheader.bmiHeader.biClrUsed       = 256;
+	m_FileInfoheader.bmiHeader.biClrImportant  = 0;
+
+	return 0;
+}
 
 
 
 int FrameRcvThread::FramePalette(int index)
 {
-	index = 0;
 
-	
-	BITMAPINFO* m_pBmpInfo;
-	BYTE m_bmpInfo[BITMAPINFO_SIZE];
-
-	
-	m_pBmpInfo = (BITMAPINFO*)(&m_bmpInfo);
-	m_pBmpInfo->bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
-	m_pBmpInfo->bmiHeader.biWidth         = pFrame->width;
-	m_pBmpInfo->bmiHeader.biHeight        = -pFrame->height;
-	m_pBmpInfo->bmiHeader.biPlanes        = 1;
-	m_pBmpInfo->bmiHeader.biBitCount      = 8;
-	m_pBmpInfo->bmiHeader.biCompression   = 0;
-	m_pBmpInfo->bmiHeader.biSizeImage     = 0;
-	m_pBmpInfo->bmiHeader.biXPelsPerMeter = 0;
-	m_pBmpInfo->bmiHeader.biYPelsPerMeter = 0;
-	m_pBmpInfo->bmiHeader.biClrUsed       = 256;
-	m_pBmpInfo->bmiHeader.biClrImportant  = 0;
 	for (int i = 0; i <= 255; i++)
 	{
-		(m_pBmpInfo->bmiColors[i]).rgbRed   = palette[(index * 256 + i) * 3 + 0];
-		(m_pBmpInfo->bmiColors[i]).rgbGreen = palette[(index * 256 + i) * 3 + 1];
-		(m_pBmpInfo->bmiColors[i]).rgbBlue  = palette[(index * 256 + i) * 3 + 2];
+		m_FileInfoheader.bmiColors[i].rgbRed   = palette[(index * 256 + i) * 3 + 0];
+		m_FileInfoheader.bmiColors[i].rgbGreen = palette[(index * 256 + i) * 3 + 1];
+		m_FileInfoheader.bmiColors[i].rgbBlue  = palette[(index * 256 + i) * 3 + 2];
 	}
 
 	return 0;
 }
 
-int FrameRcvThread::FrameConvert(Frame* pFrame)
+int FrameRcvThread::FrameConvert()
 {
 
-	USHORT p[MAX_COUNT], m = 0, max = HIST_SIZE - 1, min = 0;
+	USHORT p[MAX_COUNT];
+	int m = 0, max = HIST_SIZE - 1, min = 0;
 	memcpy(p, pFrame->buffer, MAX_COUNT * 2);
 	for (int i = 5; i < pFrame->width - 4; i++)
 	{
@@ -1026,8 +1033,8 @@ int FrameRcvThread::FrameConvert(Frame* pFrame)
 			if (m < p[i + pFrame->width * j])
 			{
 				m = p[i + pFrame->width * j];
-				m_pDisplay->iParam[PARAM_MAX_X] = i;
-				m_pDisplay->iParam[PARAM_MAX_Y] = j;
+				m_Covertframe.iParam[PARAM_MAX_X] = i;
+				m_Covertframe.iParam[PARAM_MAX_Y] = j;
 			}
 		}
 	}
@@ -1068,37 +1075,57 @@ int FrameRcvThread::FrameConvert(Frame* pFrame)
 	for (int i = 0; i < pFrame->width * pFrame->height; i++)
 	{
 		if (p[i] > max)
-			m_pDisplay->buffer[i] = table[max] - v / 2 + 128;
+			m_Covertframe.buffer[i] = table[max] - v / 2 + 128;
 		else if (p[i] < min)
-			m_pDisplay->buffer[i] = table[min] - v / 2 + 128;
+			m_Covertframe.buffer[i] = table[min] - v / 2 + 128;
 		else
-			m_pDisplay->buffer[i] = table[p[i]] - v / 2 + 128;
+			m_Covertframe.buffer[i] = table[p[i]] - v / 2 + 128;
 	}
 	return 0;
 }
 	
 
-int FrameRcvThread::FrameRecv(Frame* pFrame)
+int FrameRcvThread::FrameSave()
 {
-	FramePalette();
-	FrameConvert(pFrame);
-	FrameSave(pFrame);
-	
+	m_Parent->mutex_bmp.lock();
+	memcpy((void *)&m_Parent->m_Bmpfile,(void *)&m_FileInfoheader,sizeof(BITMAPINFO));
+	memcpy((void *)m_Parent->m_Bmpfile.buffer,(void *)m_Covertframe.buffer,MAX_COUNT);
+	m_Parent->mutex_bmp.unlock();
+	delete pFrame;
+	pFrame = NULL;
+	m_Parent->update();
+	return 0;
 }
 
-int FrameRcvThread::FrameSave(Frame* pFrame)
-{
 
-	BITMAPFILEHEADER bmpFileHeader;
-	bmpFileHeader.bfType = 'M' << 8 | 'B';
-	bmpFileHeader.bfSize = 54 + 256 * 4 + m_size.cx * m_size.cy;
-	bmpFileHeader.bfReserved1 = 0;
-	bmpFileHeader.bfReserved2 = 0;
-	bmpFileHeader.bfOffBits = sizeof(BITMAPFILEHEADER) + BITMAPINFO_SIZE;
+int FrameRcvThread::FrameRecv(Frame* pTmp)
+{
+	if(mutex_frame.tryLock())
+	{
+		pFrame = pTmp; 
+		mutex_frame.unlock();
+	}	
+	else
+		delete pTmp;
+	return 0;
 }
+
+
 
 void FrameRcvThread::run()
 {
+
+while(1)
+{
+	if( !mutex_frame.tryLock())
+		continue;
+	FrameConvert();
+	FrameSave();
+
+}
+
+return ;
+
 /*
 
 	//RGB分量值  
@@ -1153,10 +1180,9 @@ PlayWidget::PlayWidget(QWidget *parent)
 	//connect();
 	//connect();
 	playing = false;
-	pFrame = NULL;
 	pCBFframe = &FrameCallBack;
-	frameThread.parent = this;
-	connect(this,SIGNAL(sigFrame(Frame *)),frameThread,SLOT(FrameRecv(Frame *)));
+	frameThread.m_Parent = this;
+	connect(this,SIGNAL(sigFrame(Frame *)),&frameThread,SLOT(FrameRecv(Frame *)));
 
 	
 
@@ -1181,22 +1207,18 @@ int PlayWidget::Stop()
 	return 0;
 }
 
-void PlayWidget::paintEvent(QPaintEvent *event)
+void PlayWidget::paintEvent(QPaintEvent *)
 {
-	if(pFrame !=NULL)
-		return;
 	int i=0;
 	QPainter painterImage(this);
-	mutex_draw.lock();
-	QImage pixImg = QImage(pFrame->buffer,640,480,QImage::Format_RGB888);
+	mutex_bmp.lock();
+	QImage pixImg = QImage((char *)&m_Bmpfile);
 	//grayImg=new QImage(graydata,width,height,bytePerLine,QImage::Format_RGB888);
 	QRect rect_image(0,0,this->width(),this->height());
 
 	painterImage.drawImage(rect_image,pixImg);
 	painterImage.end();                        //释放资源因为只是一直往上画，没有释放，使电脑卡死
-	delete pFrame;
-	pFrame = NULL;
-	mutex_draw.unlock();
+	mutex_bmp.unlock();
 	return ;
 
 

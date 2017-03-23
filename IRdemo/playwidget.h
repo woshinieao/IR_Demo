@@ -43,9 +43,24 @@ typedef struct tagRGBQUAD {
 } RGBQUAD;
 
 typedef struct tagBITMAPINFO { 
+	BITMAPFILEHEADER bmpfileheader;
     BITMAPINFOHEADER bmiHeader; //指定了一个BITMAPINFOHEADER结构，包含了有关设备相关位图的度量和颜色格式的信息
-    RGBQUAD          bmiColors[1]; //指定了一个RGBQUAD或DWORD数据类型的数组，定义了位图中的颜色。
+    RGBQUAD          bmiColors[256]; //指定了一个RGBQUAD或DWORD数据类型的数组，定义了位图中的颜色。
 } BITMAPINFO; 
+
+
+
+typedef struct tagBMPFILE {
+
+	BITMAPFILEHEADER fileheader;
+	BITMAPINFO       info;
+	BYTE buffer[MAX_COUNT];
+	struct tagBMPFILE *pre;
+	struct tagBMPFILE *next;
+	
+}BMPFLIE;
+
+
 
 
 
@@ -60,11 +75,11 @@ typedef enum enumParameter
 } eParameter;
 
 
-typedef struct tagDisplayFrame
+typedef struct tagCovertFrame
 {
 	BYTE buffer[MAX_COUNT];
 	USHORT iParam[PARAM_COUNT];
-} DisplayFrame;
+} CovertFrame;
 
 
 
@@ -83,15 +98,19 @@ class FrameRcvThread : public QThread
 	Q_OBJECT
 public:
 	FrameRcvThread();
+	int FrameHeader();
+	int FramePalette(int index);
+	int FrameConvert();
+	int FrameSave();
 	void run();
-	PlayWidget *parent;
-	DisplayFrame* m_pDisplay;
+	PlayWidget *m_Parent;
+	QMutex mutex_frame;
+	Frame *pFrame;
+	CovertFrame m_Covertframe;
+	BITMAPINFO m_FileInfoheader;
 
 public slots:
-	
-	int FramePalette(int index=0);
-	int FrameConvert(Frame *pframe);
-	int FrameSave(Frame *pframe);
+
 	int FrameRecv(Frame *pframe);
 private:
 	
@@ -109,9 +128,9 @@ public:
 	~PlayWidget();
 	friend long FrameCallBack(long lData, long lParam);
 
-	QMutex mutex_draw;
+	QMutex mutex_bmp;
 	CBF_IR pCBFframe;
-	Frame *pFrame;
+	BMPFLIE m_Bmpfile;
 
 	
 public slots:
