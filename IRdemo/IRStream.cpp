@@ -79,13 +79,13 @@ bool CIRStream::Init(int port, char* ip, CBF_IR cbf_stm, CBF_IR cbf_cmd, long pa
 	if (port)
 	{
 		pIRConnect = new CIRConnect;
-		pIRConnect->Bind(port, ip, LineReceive, (long)this);
+		pIRConnect->Bind(port, ip, LineReceive, (long)pIRConnect);
 		StreamCallback = cbf_stm;
 	}
 	if (ip)
 	{
 		pIRCommand = new CIRConnect;
-		pIRCommand->Bind(port + 1, ip, CommandReceive, (long)this);
+		pIRCommand->Bind(port + 1, ip, CommandReceive, (long)pIRConnect);
 		CommandCallback = cbf_cmd;
 	}
 	parameter = param;

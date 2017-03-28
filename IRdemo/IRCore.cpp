@@ -11,6 +11,7 @@ IR_API long IR_Create(long handle, int port, char* ip, CBF_IR cbf_stm, CBF_IR cb
 	CIRStream* pIRStream = CreateIRStream();
 	pIRStream->Init(port, ip, cbf_stm, cbf_cmd, param);
 	m_hIRStream[handle] = (long)pIRStream;
+	printf("33333333333333333333333333\n");
 	return true;
 }
 IR_API long IR_Destroy(long handle)

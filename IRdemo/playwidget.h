@@ -8,7 +8,7 @@
 #include <QImage>
 #include <QRect>
 #include <QMutex>
-
+#include <string.h>
 #include "IRCore.h"
 #include "IRPalette.h"
 typedef struct BITMAPFILEHEADER  

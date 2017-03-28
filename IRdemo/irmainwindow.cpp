@@ -22,6 +22,9 @@ int IrMainWindow::ir_connect()
 	QByteArray ipbyte = ir_ip.toLocal8Bit();
 	char*ip = ipbyte.data();
 	IR_Create(0, 10000, ip,playwidget->pCBFframe, 0, 0);
+	IR_Command(0, COMMAND_PLAY);
+
+	printf("4444444444444444\n");
     return 0;
 
 }

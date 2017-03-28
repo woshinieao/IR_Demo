@@ -1,5 +1,8 @@
 #include "IRConnect.h"
 
+
+
+
 int CreateConnect(SOCKET* pSocket, int port)
 {
 
@@ -31,6 +34,8 @@ int CreateConnect(SOCKET* pSocket, int port)
 
 
 	*pSocket = socket(AF_INET, SOCK_DGRAM, 0);
+	printf("+++++++++++++	%d\n",*pSocket);
+
 	struct sockaddr_in addrSrv;
 	addrSrv.sin_family = AF_INET;
 	addrSrv.sin_port = htons(port);
@@ -69,8 +74,15 @@ void *ReceiveProcess(void *lpParameter)
 	memset(recvbuffer, 0 , BUFF_LEN);
 	while (pIRConnect->run == true)
 	{
-		if (recv(pIRConnect->socket, recvbuffer, BUFF_LEN, 0) >=0)
+	printf("111111111111111111111111111  %d\n",pIRConnect->socket);
+	struct sockaddr_in	addressl;
+	socklen_t len = sizeof(struct sockaddr);
+	int ret = recvfrom(pIRConnect->socket,recvbuffer,BUFF_LEN,0, (struct sockaddr *)&addressl, &len);
+	perror("recvfrom err:");
+	if(ret>=0)
+	//	if (recv(pIRConnect->socket, recvbuffer, BUFF_LEN, 0) >=0)
 		{
+		printf("aaaaaaaaaaaaa %s \n",recvbuffer);	
 			if (pIRConnect->run == true) pIRConnect->callback(recvbuffer, pIRConnect->parameter);
 		}
 		else sleep(1);
@@ -98,8 +110,10 @@ bool CIRConnect::Bind(short port, CBF_IRConnect cbf, long param)
 {
 	return Bind(port, NULL, cbf, param);
 }
+
 bool CIRConnect::Bind(short port, char* ip, CBF_IRConnect cbf, long param)
 {
+
 	if (!CreateConnect(&socket, port)) return false;
 	if (ip)
 	{
@@ -119,7 +133,9 @@ bool CIRConnect::Bind(short port, char* ip, CBF_IRConnect cbf, long param)
 		CloseHandle(handle);
 #else	
 		pthread_t ThreadID;
-	pthread_create(&ThreadID,NULL,ReceiveProcess,NULL);
+printf("aaaaaaaaaaaaaaaaaaaaaaaaa\n");
+	pthread_create(&ThreadID,NULL,ReceiveProcess,(void *)this);
+	printf("bbbbbbbbbbbbbbbbb\n");
 #endif	
 	}
 	return true;

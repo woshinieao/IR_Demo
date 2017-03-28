@@ -985,14 +985,14 @@ FrameRcvThread::FrameRcvThread()
 
 int FrameRcvThread::FrameHeader()
 {
-	m_FileInfoheader.bmpfileheader.bfType = ('M' << 8 | 'B');
-	m_FileInfoheader.bmpfileheader.bfSize = 54 + 256 * 4 + pFrame->width* pFrame->height;
+		m_FileInfoheader.bmpfileheader.bfType = ('M' << 8 | 'B');
+	m_FileInfoheader.bmpfileheader.bfSize = 54 + 256 * 4 +MAX_WIDTH* MAX_HEIGHT;
 	m_FileInfoheader.bmpfileheader.bfReserved1 = 0;
 	m_FileInfoheader.bmpfileheader.bfReserved2 = 0;
 	m_FileInfoheader.bmpfileheader.bfOffBits = sizeof(BITMAPFILEHEADER) + BITMAPINFO_SIZE;
 	m_FileInfoheader.bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
-	m_FileInfoheader.bmiHeader.biWidth         = pFrame->width;
-	m_FileInfoheader.bmiHeader.biHeight        = -pFrame->height;
+	m_FileInfoheader.bmiHeader.biWidth         = MAX_WIDTH;
+	m_FileInfoheader.bmiHeader.biHeight        = -MAX_HEIGHT;
 	m_FileInfoheader.bmiHeader.biPlanes        = 1;
 	m_FileInfoheader.bmiHeader.biBitCount      = 8;
 	m_FileInfoheader.bmiHeader.biCompression   = 0;
@@ -1193,7 +1193,7 @@ PlayWidget::PlayWidget(QWidget *parent)
 int PlayWidget::Play()
 {
 
-
+printf("++++++++++++++++++++++++\n");
 	IR_Command(0, COMMAND_PLAY);
 //	frameThread.start();
 	return 0;
