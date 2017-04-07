@@ -1,6 +1,7 @@
 #include "playwidget.h"
+#include<stdio.h>
 /*
-BYTE palette[] = {
+u_int8_t palette[] = {
 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x02, 0x02, 0x02, 0x03, 0x03, 0x03,
 0x03, 0x03, 0x03, 0x04, 0x04, 0x04, 0x05, 0x05, 0x05, 0x06, 0x06, 0x06, 
 0x08, 0x08, 0x08, 0x09, 0x09, 0x09, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 
@@ -647,7 +648,7 @@ BYTE palette[] = {
 };
 */
 
-BYTE palette[] = {    
+BYTE paletteList[] = {
 	0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x02, 0x02, 0x02, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x04, 0x04, 0x04, 0x05, 0x05, 0x05, 0x06, 
 	0x06, 0x06, 0x08, 0x08, 0x08, 0x09, 0x09, 0x09, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0B, 0x0B, 0x0B, 0x0C, 0x0C, 0x0C, 0x0D, 0x0D, 0x0D, 0x0F, 0x0F,
 	0x0F, 0x10, 0x10, 0x10, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x12, 0x12, 0x12, 0x13, 0x13, 0x13, 0x14, 0x14, 0x14, 0x16, 0x16, 0x16, 0x17, 0x17, 0x17,
@@ -962,70 +963,449 @@ BYTE palette[] = {
 
 
 
-
-
-
-long FrameCallBack(long lData, long lParam)
+long  FrameCallBack(long lData, long lParam)
 {
-	PlayWidget* pIRPlayer = (PlayWidget*)lParam;
-	emit pIRPlayer->sigFrame((Frame *)lData);
+
+    //printf(" FrameRcvThread  -> FrameCallBack     \n");
+    PlayWidget* pIRPlayer = (PlayWidget*)lParam;
+    if( pIRPlayer->m_play == false)
+        return 0;
+    if(pIRPlayer->mutex_bmp.tryLock())
+	{
+        pIRPlayer->pFrame =(Frame *)lData;
+       	pIRPlayer-> FrameRecv((Frame *)lData);
+        pIRPlayer->mutex_bmp.unlock();
+	}
+	else
+    {
+        pIRPlayer->pFrame = NULL;
+        delete (Frame *)lData;
+    }
+
 	return 0;
 
 }
 
-FrameRcvThread::FrameRcvThread()
+
+PlayWidget::PlayWidget(QWidget *parent)
+    : QWidget(parent)
 {
-	pFrame = NULL;
-
-	FrameHeader();
-	FramePalette(0);
-
+	pen.setWidth(3);
+	pen.setColor(Qt::red);
+    pFrame = NULL;
+    pCBFframe = &FrameCallBack;
+    FrameHeader();
+    FramePalette(0);
 	
 }
 
-int FrameRcvThread::FrameHeader()
-{
-		m_FileInfoheader.bmpfileheader.bfType = ('M' << 8 | 'B');
-	m_FileInfoheader.bmpfileheader.bfSize = 54 + 256 * 4 +MAX_WIDTH* MAX_HEIGHT;
-	m_FileInfoheader.bmpfileheader.bfReserved1 = 0;
-	m_FileInfoheader.bmpfileheader.bfReserved2 = 0;
-	m_FileInfoheader.bmpfileheader.bfOffBits = sizeof(BITMAPFILEHEADER) + BITMAPINFO_SIZE;
-	m_FileInfoheader.bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
-	m_FileInfoheader.bmiHeader.biWidth         = MAX_WIDTH;
-	m_FileInfoheader.bmiHeader.biHeight        = -MAX_HEIGHT;
-	m_FileInfoheader.bmiHeader.biPlanes        = 1;
-	m_FileInfoheader.bmiHeader.biBitCount      = 8;
-	m_FileInfoheader.bmiHeader.biCompression   = 0;
-	m_FileInfoheader.bmiHeader.biSizeImage     = 0;
-	m_FileInfoheader.bmiHeader.biXPelsPerMeter = 0;
-	m_FileInfoheader.bmiHeader.biYPelsPerMeter = 0;
-	m_FileInfoheader.bmiHeader.biClrUsed       = 256;
-	m_FileInfoheader.bmiHeader.biClrImportant  = 0;
 
+
+int PlayWidget::FrameHeader()
+{
+	
+	m_FileInfoheader.fileheader.bfType = 'M' << 8 | 'B';
+	m_FileInfoheader.fileheader.bfSize = 54 + 256 * 4 +MAX_WIDTH* MAX_HEIGHT;
+	m_FileInfoheader.fileheader.bfReserved1 = 0;
+	m_FileInfoheader.fileheader.bfReserved2 = 0;
+	m_FileInfoheader.fileheader.bfOffBits = sizeof(BITMAPFILEHEADER)-2 + sizeof(BITMAPINFO); //减去2是因为结构体BITMAPFILEHEADER 中开头多加了两字节          
+	m_FileInfoheader.info.bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
+	m_FileInfoheader.info.bmiHeader.biWidth         = MAX_WIDTH;
+	m_FileInfoheader.info.bmiHeader.biHeight        = -MAX_HEIGHT;
+	m_FileInfoheader.info.bmiHeader.biPlanes        = 1;
+	m_FileInfoheader.info.bmiHeader.biBitCount      = 8;
+	m_FileInfoheader.info.bmiHeader.biCompression   = 0;
+	m_FileInfoheader.info.bmiHeader.biSizeImage     = 0;
+	m_FileInfoheader.info.bmiHeader.biXPelsPerMeter = 0;
+	m_FileInfoheader.info.bmiHeader.biYPelsPerMeter = 0;
+	m_FileInfoheader.info.bmiHeader.biClrUsed       = 256;
+	m_FileInfoheader.info.bmiHeader.biClrImportant  = 0;
+
+/*
+printf("BITMAPFILEHEADER:\n");	   
+printf("bfSize:	  %d\n",m_FileInfoheader.fileheader.bfSize);	 
+printf("bfReserved1: %d\n",m_FileInfoheader.fileheader.bfReserved1);	  
+printf("bfReserved2: %d\n",m_FileInfoheader.fileheader.bfReserved2);	 
+printf("bfOffBits:   %d\n",m_FileInfoheader.fileheader.bfOffBits); 
+printf("BITMAPINFODEADER:\n");	  
+printf("biSize:		   %d\n",m_FileInfoheader.info.bmiHeader.biSize);    
+printf("biWidth: 	   %d\n",m_FileInfoheader.info.bmiHeader.biWidth);	
+printf("biHeight:	   %d\n",m_FileInfoheader.info.bmiHeader.biHeight);	 
+printf("biPlanes:	   %d\n",m_FileInfoheader.info.bmiHeader.biPlanes);	 
+printf("biBitCount:	   %d\n",m_FileInfoheader.info.bmiHeader.biBitCount);    
+printf("biCompression:  %d\n",m_FileInfoheader.info.bmiHeader.biCompression);	  
+printf("biSizeImage:    %d\n",m_FileInfoheader.info.bmiHeader.biSizeImage);	
+printf("biSizeImage:    %d\n",m_FileInfoheader.info.bmiHeader.biXPelsPerMeter);	
+printf("biYPelsPerMeter:%d\n",m_FileInfoheader.info.bmiHeader.biYPelsPerMeter);	
+printf("biClrUsed:	   %d\n",m_FileInfoheader.info.bmiHeader.biClrUsed);	  
+printf("biClrImportant: %d\n",m_FileInfoheader.info.bmiHeader.biClrImportant);   
+printf("sizeof(BITMAPFILEHEADER)%ld	sizeof(BITMAPINFODEADER):%ld \n",sizeof(BITMAPFILEHEADER),sizeof(BITMAPINFODEADER));   
+*/
 	return 0;
 }
 
 
 
-int FrameRcvThread::FramePalette(int index)
+int PlayWidget::FramePalette(int index)
 {
-
+	if(index >8)
+		return -1;
+	printf("palette index :%d\n",index);
 	for (int i = 0; i <= 255; i++)
 	{
-		m_FileInfoheader.bmiColors[i].rgbRed   = palette[(index * 256 + i) * 3 + 0];
-		m_FileInfoheader.bmiColors[i].rgbGreen = palette[(index * 256 + i) * 3 + 1];
-		m_FileInfoheader.bmiColors[i].rgbBlue  = palette[(index * 256 + i) * 3 + 2];
+        m_FileInfoheader.info.bmiColors[i].rgbRed   = paletteList[(index * 256 + i) * 3 + 0];
+        m_FileInfoheader.info.bmiColors[i].rgbGreen = paletteList[(index * 256 + i) * 3 + 1];
+        m_FileInfoheader.info.bmiColors[i].rgbBlue  = paletteList[(index * 256 + i) * 3 + 2];
 	}
 
 	return 0;
 }
 
-int FrameRcvThread::FrameConvert()
+int PlayWidget::SetHistParam(short Param1, short Param2, short Param3, short Param4, short Param5)
+{
+	u16HistParam1 = Param1;
+	u16HistParam2 = Param2;
+	u16HistParam3 = Param3;
+	u16HistParam4 = Param4;
+	u16HistParam5 = Param5;
+	return 1;
+}
+					
+
+int PlayWidget::Histogram(UINT16 *p, UINT16 u16Max, UINT16 u16Min, UINT16 u16Width, UINT16 u16Hight, UINT16 *QuanMax, UINT16 *QuanMin, UINT16 *NrBins, UINT16 u16Param4, UINT16 u16Param5)
+{
+	USHORT max = HIST_SIZE - 1, min = 0;
+	static int hist[HIST_SIZE];
+	static short y8_eq[MAX_COUNT];
+	long sum = 0;
+
+	memset(hist, 0, sizeof(int) * HIST_SIZE);
+	for (int i = 0; i < u16Width * u16Hight; i++)
+	{
+		hist[p[i]]++;
+	}
+	for (int i = 0; i < HIST_SIZE; i++)
+	{
+		sum += hist[i];
+		if (sum <= u16Width * u16Hight * 0.01)
+			min = i;
+		if (sum <= u16Width * u16Hight * 0.99)
+			max = i;
+		else
+			break;
+	}
+	if (hist[min] > 32) hist[min] = 32;
+	else if (hist[min] < 1) hist[min] = 1;
+	for (int i = min + 1; i <= max; i++)
+	{
+		if (hist[i] > 32) hist[i] = hist[i-1] + 32;
+		else if (hist[i] <	1) hist[i] = hist[i-1] + 1;
+		else hist[i] += hist[i-1];
+	}
+	UINT v = 232;
+	if (max - min < 232) v = max - min;
+	if (max - min < 16) v = 16;
+
+	v = v * u16Param5 /128.0;
+	if (v > 255) v = 255;
+
+	BYTE table[HIST_SIZE]; 
+	for (int i = min; i <= max; i++)
+	{
+		table[i] = (BYTE)(hist[i] * v / hist[max]);
+	}
+	for (int i = 0; i < u16Width * u16Hight; i++)
+	{
+		if (p[i] > max)
+			y8_eq[i] = table[max] - v / 2 + u16Param4;
+		else if (p[i] < min)
+			y8_eq[i] = table[min] - v / 2 + u16Param4;
+		else
+			y8_eq[i] = table[p[i]] - v / 2 + u16Param4;
+
+		if (y8_eq[i] > 255) y8_eq[i] = 255;
+		if (y8_eq[i] < 0)	y8_eq[i] = 0;
+		p[i] = y8_eq[i];
+	}
+
+
+	//static int hist[HIST_SIZE];
+	//static SHORT y8_eq[MAX_COUNT];
+
+	//memset(hist, 0, sizeof(int) * HIST_SIZE);
+	//for (int i = 0; i < u16Width * u16Hight; i++)
+	//{
+	//	hist[pFrame[i]]++;
+	//}
+	//
+	//for (int i = u16Min + 1; i <= u16Max; i++)
+	//{
+	//	if (hist[i] > 32) hist[i] = hist[i-1] + 32;
+	//	else if (hist[i] <	1) hist[i] = hist[i-1] + 1;
+	//	else hist[i] += hist[i-1];
+	//}
+	//BYTE v = 232;
+	//if (u16Max - u16Min < 232) v = u16Max - u16Min;
+	//if (u16Max - u16Min < 16) v = 16;
+
+	//if (v > 255) v = 255;
+
+	//BYTE table[HIST_SIZE]; 
+	//for (int i = u16Min; i <= u16Max; i++)
+	//{
+	//	table[i] = (BYTE)(hist[i] * v / hist[u16Max]);
+	//}
+	//for (int i = 0; i < u16Width * u16Hight; i++)
+	//{
+	//	if (pFrame[i] > u16Max)
+	//		y8_eq[i] = table[u16Max];
+	//	else if (pFrame[i] < u16Min)
+	//		y8_eq[i] = table[u16Min];
+	//	else
+	//		y8_eq[i] = table[pFrame[i]];
+
+	//	if (y8_eq[i] > 255) y8_eq[i] = 255;
+	//	if (y8_eq[i] < 0)	y8_eq[i] = 0;
+	//	pFrame[i] = y8_eq[i];
+	//}
+
+	for (int j = 0; j < u16Hight; j++)
+	{
+		for (int i = 0; i < u16Width; i++)
+		{
+			if (*QuanMax < p[i + u16Width * j])
+			{
+				*QuanMax = p[i + u16Width * j];
+			}
+			if (*QuanMin > p[i + u16Width * j])
+			{
+				*QuanMin = p[i + u16Width * j];
+			}
+		} 
+	}
+	return 0;
+}
+
+#if 0
+int PlayWidget::FrameConvert()
 {
 
+
+	static UINT32 u32Cnt = 0;
+
+	USHORT p[MAX_COUNT], max = HIST_SIZE - 1, min = 0, y16_max = HIST_SIZE - 1, y16_min = 0, y16_avg = 0, y16_diff = 0;
+	//USHORT n = 16383, m = 0, u16FpaTemp = 0;
+	static short y8_linear[MAX_COUNT];
+	static short y8_eq[MAX_COUNT];
+
+	memcpy(p, pFrame->buffer, MAX_COUNT * 2);
+
+	u8SensorType = pFrame->u8SensorType;
+	u32Cnt++;
+	if (u8HistMethod == 0)
+	{
+
+		int hist[HIST_SIZE];
+		long sum = 0;
+		memset(hist, 0, sizeof(int) * HIST_SIZE);
+		for (int i = 0; i < pFrame->width * pFrame->height; i++)
+		{
+			hist[p[i]]++;
+		}
+		for (int i = 0; i < HIST_SIZE; i++)
+		{
+			sum += hist[i];
+			if (sum <= pFrame->width * pFrame->height * 0.01)
+				min = i;
+			if (sum <= pFrame->width * pFrame->height * 0.99)
+				max = i;
+			else
+				break;
+		}
+		if (hist[min] > 32) hist[min] = 32;
+		else if (hist[min] < 1) hist[min] = 1;
+		for (int i = min + 1; i <= max; i++)
+		{
+			if (hist[i] > 32) hist[i] = hist[i-1] + 32;
+			else if (hist[i] <	1) hist[i] = hist[i-1] + 1;
+			else hist[i] += hist[i-1];
+		}
+		UINT16 v = 232;
+		if (max - min < 232) v = max - min;
+		if (max - min < 16) v = 16;
+
+		v = v * u16HistParam5 / 64.0;
+		if (v > 255) v = 255;
+
+		UINT16 table[HIST_SIZE]; 
+		for (int i = min; i <= max; i++)
+		{
+			table[i] = (hist[i] * v / hist[max]);
+		}
+		for (int i = 0; i < pFrame->width * pFrame->height; i++)
+		{
+			if (p[i] > max)
+				y8_eq[i] = table[max] - v / 2 + u16HistParam4;
+			else if (p[i] < min)
+				y8_eq[i] = table[min] - v / 2 + u16HistParam4;
+			else
+				y8_eq[i] = table[p[i]] - v / 2 + u16HistParam4;
+
+			if (y8_eq[i] > 255) y8_eq[i] = 255;
+			if (y8_eq[i] < 0)	y8_eq[i] = 0;
+			m_Covertframe.buffer[i] = y8_eq[i];
+		}
+
+	}
+	else if (u8HistMethod == 3)
+	{
+		UINT16 u16NrBins = 128;
+		float clipLimit ;
+		UINT16	u16QuanMax = 0;;
+		UINT16	u16QuanMin = 256;
+
+		clipLimit = u16HistParam1;
+
+		Histogram(p, m_iParam[PARAM_MAX_TEMP], m_iParam[PARAM_MIN_TEMP], pFrame->width, pFrame->height, &u16QuanMax, &u16QuanMin, &u16NrBins, u16HistParam2, u16HistParam3);
+		for (int i = 0; i < pFrame->width * pFrame->height; i++)
+		{
+			m_Covertframe.buffer[i] = p[i];
+		}
+		u16NrBins = 255;
+	//	CLAHE(m_Covertframe.buffer, pFrame->width, pFrame->height,u16QuanMin, u16QuanMax, u8NrX, u8NrY, u16NrBins, clipLimit);
+
+	}
+	else if (u8HistMethod == 1)
+	{
+		int hist[HIST_SIZE];
+		long sum = 0;
+		memset(hist, 0, sizeof(int) * HIST_SIZE);
+		for (int i = 0; i < pFrame->width * pFrame->height; i++)
+		{
+			hist[p[i]]++;
+		}
+		for (int i = 0; i < HIST_SIZE; i++)
+		{
+			sum += hist[i];
+			if (sum <= pFrame->width * pFrame->height * 0.01)
+				min = i;
+			if (sum <= pFrame->width * pFrame->height * 0.99)
+				max = i;
+			else
+				break;
+		}
+		if (hist[min] > 32) hist[min] = 32;
+		else if (hist[min] < 1) hist[min] = 1;
+		for (int i = min + 1; i <= max; i++)
+		{
+			if (hist[i] > 32) hist[i] = hist[i-1] + 32;
+			else if (hist[i] <	1) hist[i] = hist[i-1] + 0;
+			else hist[i] += hist[i-1];
+		}
+		BYTE v = 232;
+
+		BYTE table[HIST_SIZE]; 
+		for (int i = min; i <= max; i++)
+		{
+			table[i] = (BYTE)((hist[i] - hist[min]) * v / (hist[max] - hist[min]));
+		}
+		for (int i = 0; i < pFrame->width * pFrame->height; i++)
+		{
+			if (p[i] > max)
+				m_Covertframe.buffer[i] = table[max] - v / 2 + 127;
+			else if (p[i] < min)
+				m_Covertframe.buffer[i] = table[min] - v / 2 + 127;
+			else
+				m_Covertframe.buffer[i] = table[p[i]] - v / 2 + 127;
+		}
+	}
+	else if (u8HistMethod == 2)
+	{
+		int hist[HIST_SIZE];
+		long sum = 0;
+		memset(hist, 0, sizeof(int) * HIST_SIZE);
+		for (int i = 0; i < pFrame->width * pFrame->height; i++)
+		{
+			hist[p[i]]++;
+		}
+		for (int i = 0; i < HIST_SIZE; i++)
+		{
+			sum += hist[i];
+			if (sum <= pFrame->width * pFrame->height * 0.01)
+				min = i;
+			if (sum <= pFrame->width * pFrame->height * 0.2)
+				y16_min = i;
+			if (sum <= pFrame->width * pFrame->height * 0.8)
+				y16_max = i;
+			if (sum <= pFrame->width * pFrame->height * 0.99)
+				max = i;
+			else
+				break;
+		}
+		//线性调光
+		y16_diff = (y16_max - y16_min) + 64;
+		y16_avg = (y16_max + y16_min) /2 ;
+
+		UINT16 k;
+		UINT16 c;
+
+		k = u16HistParam1 * 8192 / y16_diff;
+		c = u16HistParam2 - k * y16_avg / 8192;
+
+		if (hist[min] > 32) hist[min] = 32;
+		else if (hist[min] < 1) hist[min] = 1;
+		for (int i = min + 1; i <= max; i++)
+		{
+			if (hist[i] > 32) hist[i] = hist[i-1] + 32;
+			else if (hist[i] <	1) hist[i] = hist[i-1] + 1;
+			else hist[i] += hist[i-1];
+		}
+		UINT v = 232;
+		if (max - min < 232) v = max - min;
+		if (max - min < 16) v = 16;
+
+		v = v * u16HistParam5 /128.0;
+		if(v > 255)
+		   v = 255;
+
+		BYTE table[HIST_SIZE]; 
+		for (int i = min; i <= max; i++)
+		{
+			table[i] = (BYTE)(hist[i] * v / hist[max]);
+		}
+		for (int i = 0; i < pFrame->width * pFrame->height; i++)
+		{
+			if (p[i] > max)
+				y8_eq[i] = table[max] - v / 2 + u16HistParam4;
+			else if (p[i] < min)
+				y8_eq[i] = table[min] - v / 2 + u16HistParam4;
+			else
+				y8_eq[i] = table[p[i]] - v / 2 + u16HistParam4;
+
+			y8_linear[i] = p[i] * k / 8192 + c;
+
+			if (y8_eq[i] > 255) y8_eq[i] = 255;
+			if (y8_eq[i] < 0)	y8_eq[i] = 0;
+			if (y8_linear[i] > 255) y8_linear[i] = 255;
+			if (y8_linear[i] < 0)	y8_linear[i] = 0;
+
+			m_Covertframe.buffer[i] =  (u16HistParam3 * y8_eq[i] + (1024 - u16HistParam3) * y8_linear[i]) / 1024;
+		}
+	}
+	return 0;
+}
+
+#endif
+#if 1
+int PlayWidget::FrameConvert()
+{
 	USHORT p[MAX_COUNT];
 	int m = 0, max = HIST_SIZE - 1, min = 0;
-	memcpy(p, pFrame->buffer, MAX_COUNT * 2);
+	if(pFrame ==NULL)
+	{
+	    return -1;
+	}
+    memcpy(p, pFrame->buffer, sizeof(pFrame->buffer) );
 	for (int i = 5; i < pFrame->width - 4; i++)
 	{
 		for (int j = 5; j < pFrame->height - 4; j++)
@@ -1083,150 +1463,126 @@ int FrameRcvThread::FrameConvert()
 	}
 	return 0;
 }
+#endif	
+
+
+int PlayWidget::FrameRecv(Frame* pTmp)
+{
+	if(pTmp == NULL)
+		return -1;
+	pFrame = pTmp;
+	USHORT m = 0, n = 16383;
+
 	
-
-int FrameRcvThread::FrameSave()
-{
-	m_Parent->mutex_bmp.lock();
-	memcpy((void *)&m_Parent->m_Bmpfile,(void *)&m_FileInfoheader,sizeof(BITMAPINFO));
-	memcpy((void *)m_Parent->m_Bmpfile.buffer,(void *)m_Covertframe.buffer,MAX_COUNT);
-	m_Parent->mutex_bmp.unlock();
-	delete pFrame;
-	pFrame = NULL;
-	m_Parent->update();
-	return 0;
-}
-
-
-int FrameRcvThread::FrameRecv(Frame* pTmp)
-{
-	if(mutex_frame.tryLock())
-	{
-		pFrame = pTmp; 
-		mutex_frame.unlock();
-	}	
-	else
-		delete pTmp;
-	return 0;
-}
-
-
-
-void FrameRcvThread::run()
-{
-
-while(1)
-{
-	if( !mutex_frame.tryLock())
-		continue;
-	FrameConvert();
-	FrameSave();
-
-}
-
-return ;
-
-/*
-
-	//RGB分量值  
-	int b = 0;	
-	int g = 0;	
-	int r = 0;	 
-
-    while(1)
-    {
-		if(parent->pTmpFrame == NULL)
-			continue;
-		mutex_frame.lock();
-		pFrame = parent->pTmpFrame;
-		parent->pTmpFrame = NULL;
-		mutex_frame.unlock();
-
-		parent->desImage = QImage(pFrame->width,pFrame->height,QImage::Format_RGB32); //RGB32  
-		//设置像素
-		if(mutex_image.trylock())
+		for (int j = 0; j < pFrame->height; j++)
 		{
-			for (int i=0;i<pFrame->height;i++)	
-			{  
-				for (int j=0;j<pFrame->width;j++)  
-				{  
-					b = (int)*(pFrame->buffer+i*pFrame->width+j);  
-					g = b;	
-					r = g;	
-					desImage.setPixel(j,i,qRgb(r,g,b));  
-				}  
-			}  
-			parent->update();
-			mutex_image.unlock();
+			for (int i = 0; i < pFrame->width; i++)
+			{
+				if (m < pFrame->buffer[i + pFrame->width * j])
+				{
+					m = pFrame->buffer[i + pFrame->width * j];
+					m_Covertframe.iParam[PARAM_MAX_X] = i;
+					m_Covertframe.iParam[PARAM_MAX_Y] = j;
+					m_iParam[PARAM_MAX_TEMP] = m;
+				}
+				if (n > pFrame->buffer[i + pFrame->width * j])
+				{
+					n = pFrame->buffer[i + pFrame->width * j];
+					m_iParam[PARAM_MIN_TEMP] = pFrame->buffer[i + pFrame->width * j];
+				}
+			} 
 		}
-    }
- 
-  
-*/
-  
+	
+		m_iParam[PARAM_FPA_TEMP] = pFrame->u16FpaTemp;
+		m_iParam[PARAM_CEN_TEMP] = pFrame->buffer[(pFrame->height/2 - 1)*pFrame->width + pFrame->width/2];
+		m_iSum[PARAM_FPA_TEMP] = m_iParam[PARAM_FPA_TEMP];
+		m_iSum[PARAM_CEN_TEMP] = m_iParam[PARAM_CEN_TEMP];
+		m_iSum[PARAM_MAX_TEMP] = m_iParam[PARAM_MAX_TEMP];
+		m_iSum[PARAM_MIN_TEMP] = m_iParam[PARAM_MIN_TEMP];
 
-	 
+/*	
+		//刷新
+		if(m_iRecv == m_iFps) //半秒刷新一次
+		{
+			m_Covertframe.iParam[PARAM_FPA_TEMP] = m_iSum[PARAM_FPA_TEMP]/m_iRecv;
+			m_Covertframe.iParam[PARAM_CEN_TEMP] = m_iSum[PARAM_CEN_TEMP]/m_iRecv;
+			m_Covertframe.iParam[PARAM_MAX_TEMP] = m_iSum[PARAM_MAX_TEMP]/m_iRecv;
+			m_Covertframe.iParam[PARAM_MIN_TEMP] = m_iSum[PARAM_MIN_TEMP]/m_iRecv;
+			m_iRecv = 0;
+			m_iSum[PARAM_FPA_TEMP] = 0;
+			m_iSum[PARAM_CEN_TEMP] = 0;
+			m_iSum[PARAM_MAX_TEMP] = 0;
+			m_iSum[PARAM_MIN_TEMP] = 0;
+		}
+		else if(m_iRecv > m_iFps)
+		{
+			m_iRecv = 0;
+			m_iSum[PARAM_FPA_TEMP] = 0;
+			m_iSum[PARAM_CEN_TEMP] = 0;
+			m_iSum[PARAM_MAX_TEMP] = 0;
+			m_iSum[PARAM_MIN_TEMP] = 0;
+		}
+	
+ */
+    FrameConvert();
+    memcpy((void *)&m_Bmpfile,(char *)(&m_FileInfoheader)+2,sizeof(BITMAPINFO)-2);
+    memcpy((void *)m_Bmpfile.buffer,(void *)m_Covertframe.buffer,MAX_COUNT);
+    update();
+	return 0;
+
 }
 
 
-
-
-
-
-PlayWidget::PlayWidget(QWidget *parent)
-	: QWidget(parent)
+int PlayWidget::GrapPicture()
 {
-
-	//connect();
-	//connect();
-	playing = false;
-	pCBFframe = &FrameCallBack;
-	frameThread.m_Parent = this;
-	connect(this,SIGNAL(sigFrame(Frame *)),&frameThread,SLOT(FrameRecv(Frame *)));
-
-	
-
-	
+    m_file = QDate::currentDate().toString("yyyy.MM.dd")+"-"+ QTime::currentTime().toString("hh.mm.ss")+".bmp";
+	m_grap = true;
+qDebug()<<m_file;
+	return 0;
 }
+
+
 
 
 int PlayWidget::Play()
 {
-
-printf("++++++++++++++++++++++++\n");
 	IR_Command(0, COMMAND_PLAY);
-//	frameThread.start();
+ 	m_play = true;
 	return 0;
-
 
 }
 
 int PlayWidget::Stop()
 {
 	IR_Command(0, COMMAND_STOP);
+    //m_play = false;
 	return 0;
 }
 
 void PlayWidget::paintEvent(QPaintEvent *)
 {
-	int i=0;
+    if(m_play == false)
+        return;
 	QPainter painterImage(this);
-	mutex_bmp.lock();
-	QImage pixImg = QImage((char *)&m_Bmpfile);
-	//grayImg=new QImage(graydata,width,height,bytePerLine,QImage::Format_RGB888);
 	QRect rect_image(0,0,this->width(),this->height());
-
+	QImage pixImg;
+    mutex_bmp.lock();
+    pixImg.loadFromData((unsigned char *)&m_Bmpfile,sizeof(BMPFLIE),0);
 	painterImage.drawImage(rect_image,pixImg);
-	painterImage.end();                        //释放资源因为只是一直往上画，没有释放，使电脑卡死
+	if(m_grap)
+	{
+		pixImg.save(m_file);
+		m_grap = false;
+	}
+
+	painterImage.setPen(pen);
+    painterImage.drawLine(m_Covertframe.iParam[PARAM_MAX_X]-5,m_Covertframe.iParam[PARAM_MAX_Y],m_Covertframe.iParam[PARAM_MAX_X]+5,m_Covertframe.iParam[PARAM_MAX_Y]);
+    painterImage.drawLine(m_Covertframe.iParam[PARAM_MAX_X],m_Covertframe.iParam[PARAM_MAX_Y]-5,m_Covertframe.iParam[PARAM_MAX_X],m_Covertframe.iParam[PARAM_MAX_Y]+5);
 	mutex_bmp.unlock();
+	painterImage.end();                        //释放资源因为只是一直往上画，没有释放，使电脑卡死
 	return ;
 
-
 }
-
-
-
-
 
 PlayWidget::~PlayWidget()
 {

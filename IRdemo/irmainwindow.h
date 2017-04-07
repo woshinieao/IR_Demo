@@ -19,11 +19,12 @@ public:
     ~IrMainWindow();
 	friend long CmdCallBack(long lData, long lParam);
 	CBF_IR pCBFcmd;
+	CBF_IR pCBFframe;
 
 public slots:
-	int ir_connect();
-    int ir_disconnect();
-	
+	int Connect();
+    int Disconnect();
+    int Calibrate();
 private:
 
 	QString ir_ip;

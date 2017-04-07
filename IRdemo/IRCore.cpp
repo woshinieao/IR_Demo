@@ -5,14 +5,21 @@ long m_hIRStream[DEVICE_COUNT] = { 0 };
 
 IR_API long IR_Create(long handle, int port, char* ip, CBF_IR cbf_stm, CBF_IR cbf_cmd, long param)
 {
+	unsigned int rvalue = 0;
 	if (handle >= DEVICE_COUNT)	return 0;
-	if (m_hIRStream[handle])
+	if (m_hIRStream[handle]) 
+	{
+		rvalue = 2;
 		IR_Destroy(handle);
+	}
 	CIRStream* pIRStream = CreateIRStream();
 	pIRStream->Init(port, ip, cbf_stm, cbf_cmd, param);
+
 	m_hIRStream[handle] = (long)pIRStream;
-	printf("33333333333333333333333333\n");
-	return true;
+	if (rvalue == 2)
+		return 2;
+	else
+		return 1;
 }
 IR_API long IR_Destroy(long handle)
 {
@@ -37,4 +44,12 @@ IR_API void DestroyIRStream(CIRStream* pIRStream)
 {
 	delete pIRStream;
 	pIRStream = NULL;
+} 
+
+IR_API long IR_Inqure(long handle)
+{
+	if (!m_hIRStream[handle]) 
+		return 0;
+	else
+		return 1;
 }

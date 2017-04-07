@@ -33,7 +33,7 @@ MOVE          = mv -f
 TAR           = tar -cf
 COMPRESS      = gzip -9f
 DISTNAME      = IRdemo1.0.0
-DISTDIR = /home/neo/samba/gitcode/IR_Demo/IRdemo/.tmp/IRdemo1.0.0
+DISTDIR = /home/nieao/samba/IR_Demo/IRdemo/.tmp/IRdemo1.0.0
 LINK          = g++
 LFLAGS        = -Wl,-O1 -Wl,-rpath,/opt/Qt5.7.0/5.7/gcc_64/lib
 LIBS          = $(SUBLIBS) -L/opt/Qt5.7.0/5.7/gcc_64/lib -lQt5Widgets -L/usr/lib64 -lQt5Gui -lQt5Core -lGL -lpthread 
@@ -1047,6 +1047,7 @@ moc_irmainwindow.cpp: /opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QMainWindow \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QPaintEvent \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QThread \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QPainter \
+		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QDebug \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QMutex \
 		IRCore.h \
 		IRStream.h \
@@ -1054,7 +1055,7 @@ moc_irmainwindow.cpp: /opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QMainWindow \
 		IRPalette.h \
 		irmainwindow.h \
 		/opt/Qt5.7.0/5.7/gcc_64/bin/moc
-	/opt/Qt5.7.0/5.7/gcc_64/bin/moc $(DEFINES) -I/opt/Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++ -I/home/neo/samba/gitcode/IR_Demo/IRdemo -I/home/neo/samba/gitcode/IR_Demo/IRdemo -I/opt/Qt5.7.0/5.7/gcc_64/include -I/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets -I/opt/Qt5.7.0/5.7/gcc_64/include/QtGui -I/opt/Qt5.7.0/5.7/gcc_64/include/QtCore -I/usr/include/c++/4.8 -I/usr/include/x86_64-linux-gnu/c++/4.8 -I/usr/include/c++/4.8/backward -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include irmainwindow.h -o moc_irmainwindow.cpp
+	/opt/Qt5.7.0/5.7/gcc_64/bin/moc $(DEFINES) -I/opt/Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++ -I/home/nieao/samba/IR_Demo/IRdemo -I/home/nieao/samba/IR_Demo/IRdemo -I/opt/Qt5.7.0/5.7/gcc_64/include -I/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets -I/opt/Qt5.7.0/5.7/gcc_64/include/QtGui -I/opt/Qt5.7.0/5.7/gcc_64/include/QtCore -I/usr/include/c++/4.8 -I/usr/include/x86_64-linux-gnu/c++/4.8 -I/usr/include/c++/4.8/backward -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include irmainwindow.h -o moc_irmainwindow.cpp
 
 moc_playwidget.cpp: /opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QtWidgets \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QtWidgetsDepends \
@@ -1498,6 +1499,7 @@ moc_playwidget.cpp: /opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QtWidgets \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QPaintEvent \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QThread \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QPainter \
+		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QDebug \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QMutex \
 		IRCore.h \
 		IRStream.h \
@@ -1505,7 +1507,7 @@ moc_playwidget.cpp: /opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QtWidgets \
 		IRPalette.h \
 		playwidget.h \
 		/opt/Qt5.7.0/5.7/gcc_64/bin/moc
-	/opt/Qt5.7.0/5.7/gcc_64/bin/moc $(DEFINES) -I/opt/Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++ -I/home/neo/samba/gitcode/IR_Demo/IRdemo -I/home/neo/samba/gitcode/IR_Demo/IRdemo -I/opt/Qt5.7.0/5.7/gcc_64/include -I/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets -I/opt/Qt5.7.0/5.7/gcc_64/include/QtGui -I/opt/Qt5.7.0/5.7/gcc_64/include/QtCore -I/usr/include/c++/4.8 -I/usr/include/x86_64-linux-gnu/c++/4.8 -I/usr/include/c++/4.8/backward -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include playwidget.h -o moc_playwidget.cpp
+	/opt/Qt5.7.0/5.7/gcc_64/bin/moc $(DEFINES) -I/opt/Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++ -I/home/nieao/samba/IR_Demo/IRdemo -I/home/nieao/samba/IR_Demo/IRdemo -I/opt/Qt5.7.0/5.7/gcc_64/include -I/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets -I/opt/Qt5.7.0/5.7/gcc_64/include/QtGui -I/opt/Qt5.7.0/5.7/gcc_64/include/QtCore -I/usr/include/c++/4.8 -I/usr/include/x86_64-linux-gnu/c++/4.8 -I/usr/include/c++/4.8/backward -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include playwidget.h -o moc_playwidget.cpp
 
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
@@ -1961,6 +1963,7 @@ ui_irmainwindow.h: irmainwindow.ui \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QPaintEvent \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QThread \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QPainter \
+		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QDebug \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QMutex \
 		IRCore.h \
 		IRStream.h \
@@ -2449,6 +2452,7 @@ irmainwindow.o: irmainwindow.cpp irmainwindow.h \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QPaintEvent \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QThread \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QPainter \
+		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QDebug \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QMutex \
 		IRCore.h \
 		IRStream.h \
@@ -2922,6 +2926,7 @@ main.o: main.cpp /opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QTextCodec \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QPaintEvent \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QThread \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QPainter \
+		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QDebug \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QMutex \
 		IRCore.h \
 		IRStream.h \
@@ -3372,6 +3377,7 @@ playwidget.o: playwidget.cpp playwidget.h \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QPaintEvent \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QThread \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QPainter \
+		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QDebug \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QMutex \
 		IRCore.h \
 		IRStream.h \
