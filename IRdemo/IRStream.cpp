@@ -28,7 +28,7 @@ UINT16 LineAck(UINT16 Linenum, UINT32 Framenum, long lParameter)
 	for(i=0; i<1; i++)
 	{
 		command[4] = i+1;
-		pIRStream->Command((char*)(&(command[0])), 14);
+		pIRStream->Command((unsigned char*)(&(command[0])), 14);
 	}
 	return 0;
 }
@@ -308,16 +308,16 @@ printf(" 1111111111111 aaaaaaaaaaaaaaaaaaa\n");
 }
 bool CIRStream::Command(eCommand command)
 {
-	char COMMAND[][14] = {
-		{'\xaa', '\xaa', '\xaa', '\xaa', '\x00', '\x00', '\x11', '\x96', '\x00', '\x04', '\x00', '\x00', '\x00', '\x01'},//数字视频开
-		{'\xaa', '\xaa', '\xaa', '\xaa', '\x00', '\x00', '\x11', '\x96', '\x00', '\x04', '\x00', '\x00', '\x00', '\x00'},//数字视频关
-		{'\xaa', '\xaa', '\xaa', '\xaa', '\x00', '\x00', '\x10', '\x3f', '\x00', '\x04','\x00', '\x00','\x00', '\x01'}, //快门
-		{'\xaa', '\xaa', '\xaa', '\xaa', '\x00', '\x00', '\x11', '\x75', '\x00', '\x04', '\x43', '\x4f', '\x4e', '\x4e'}//链接命令
+	unsigned char COMMAND[][14] = {
+		{0xaa, 0xaa, 0xaa, 0xaa, 0x00, 0x00, 0x11, 0x96, 0x00, 0x04, 0x00, 0x00, 0x00, 0x01},//数字视频开
+		{0xaa, 0xaa, 0xaa, 0xaa, 0x00, 0x00, 0x11, 0x96, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00},//数字视频关
+		{0xaa, 0xaa, 0xaa, 0xaa, 0x00, 0x00, 0x10, 0x3f, 0x00, 0x04, 0x00, 0x00, 0x00, 0x01}, //快门
+		{0xaa, 0xaa, 0xaa, 0xaa, 0x00, 0x00, 0x11, 0x75, 0x00, 0x04, 0x43, 0x4f, 0x4e, 0x4e},//链接命令
 
 	};
 	return Command(COMMAND[command], 14);
 }
-bool CIRStream::Command(char* command, int length)
+bool CIRStream::Command(unsigned char* command, int length)
 {
 	return pIRCommand ? pIRCommand->Send(command, length) : false;
 }

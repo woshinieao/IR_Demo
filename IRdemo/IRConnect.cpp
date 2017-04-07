@@ -138,7 +138,7 @@ bool CIRConnect::Bind(short port, char* ip, CBF_IRConnect cbf, long param)
     //addrfrom = address;
 	return true;
 }
-bool CIRConnect::Send(char* command, int length)
+bool CIRConnect::Send(unsigned char* command, int length)
 {
 	if (!address.sin_family) return false;
 	int sockflag = sizeof(struct sockaddr_in);

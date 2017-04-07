@@ -2,7 +2,7 @@
 #define _IRMAINWINDOW_H
 
 #include <QtWidgets/QMainWindow>
-#include <QPushButton>
+#include <QtWidgets/QPushButton>
 
 #include "ui_irmainwindow.h"
 #include "IRCore.h"
