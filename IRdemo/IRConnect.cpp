@@ -1,6 +1,6 @@
 #include "IRConnect.h"
 
-int CreateConnect(SOCKET* pSocket, int port)
+int CIRConnect::CreateConnect(SOCKET* pSocket, int port, struct sockaddr_in* addr)
 {
 
 #ifdef WIN32
@@ -30,15 +30,14 @@ int CreateConnect(SOCKET* pSocket, int port)
 
 
 
-	*pSocket = socket(AF_INET, SOCK_DGRAM, 0);
-	struct sockaddr_in addrSrv;
-	addrSrv.sin_family = AF_INET;
-	addrSrv.sin_port = htons(port);
+	*pSocket = ::socket(AF_INET, SOCK_DGRAM, 0);
+	addr->sin_family = AF_INET;
+	addr->sin_port = htons(port);
 
-    printf("2222222222222  CreateConnect      Socket :%d  port:%d\n",*pSocket,addrSrv.sin_port );
+    printf("2222222222222  CreateConnect      Socket :%d  port:%d\n",*pSocket,addr->sin_port );
 
-	addrSrv.sin_addr.s_addr = htonl(INADDR_ANY);
-	if (bind(*pSocket, (struct sockaddr *)&addrSrv, sizeof(struct sockaddr_in)) == -1)
+	addr->sin_addr.s_addr = htonl(INADDR_ANY);
+	if (bind(*pSocket, (struct sockaddr *)addr, sizeof(struct sockaddr_in)) == -1)
 		return false;
 	else
 	{
@@ -79,7 +78,7 @@ void *ReceiveProcess(void *lpParameter)
 
 		if(retRcv >= 0)
 		{
-            if(addrRev.sin_addr.s_addr == pIRConnect->address.sin_addr.s_addr)//¹ýÂËIP
+            if(addrRev.sin_addr.s_addr == pIRConnect->addrfrom.sin_addr.s_addr)//¹ýÂËIP
 			{
 				if (pIRConnect->run == true) pIRConnect->callback(recvbuffer, pIRConnect->parameter);
 			}
@@ -95,7 +94,7 @@ CIRConnect::CIRConnect(void )
 {
 	callback = NULL;
 	handle = NULL;
-	memset(&address, 0, sizeof(struct sockaddr_in));
+	memset(&addrfrom, 0, sizeof(struct sockaddr_in));
 }
 CIRConnect::~CIRConnect(void)
 {
@@ -112,13 +111,13 @@ bool CIRConnect::Bind(short port, CBF_IRConnect cbf, long param)
 }
 bool CIRConnect::Bind(short port, char* ip, CBF_IRConnect cbf, long param)
 {
-	if (!CreateConnect(&socket, port)) return false;
+	if (!CreateConnect(&socket, port,&addSrv)) return false;
 	if (ip)
 	{
-        address.sin_family = AF_INET;
-        address.sin_port = htons(port);
-       printf(" 333333333333333  CIRConnect socket:%d bind :%d\n ",socket,address.sin_port);
-        address.sin_addr.s_addr = inet_addr(ip);
+        addrfrom.sin_family = AF_INET;
+        addrfrom.sin_port = htons(port);
+       printf(" 333333333333333  CIRConnect socket:%d bind :%d\n ",socket,addrfrom.sin_port);
+        addrfrom.sin_addr.s_addr = inet_addr(ip);
 	}
 	if (cbf)
 	{
@@ -140,10 +139,10 @@ bool CIRConnect::Bind(short port, char* ip, CBF_IRConnect cbf, long param)
 }
 bool CIRConnect::Send(unsigned char* command, int length)
 {
-	if (!address.sin_family) return false;
+	if (!addrfrom.sin_family) return false;
 	int sockflag = sizeof(struct sockaddr_in);
-    printf(" 444444444444444      send  socket:%d :port:%d address:%s  command:%s\n",socket,address.sin_port,inet_ntoa(address.sin_addr),command);
-	sendto(socket, command, length, 0, (struct sockaddr *)&address, sockflag);
+    printf(" 444444444444444      send  socket:%d :port:%d address:%s  command:%s\n",socket,addrfrom.sin_port,inet_ntoa(addrfrom.sin_addr),command);
+	sendto(socket, command, length, 0, (struct sockaddr *)&addrfrom, sockflag);
 	return true;
 }
 bool CIRConnect::Close()

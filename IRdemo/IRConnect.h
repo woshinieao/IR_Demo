@@ -59,6 +59,7 @@ class CIRConnect
 public:
 	CIRConnect(void);
 	virtual ~CIRConnect(void);
+	int CreateConnect(SOCKET* pSocket, int port, struct sockaddr_in* address);
 	virtual	bool Bind(short port, char* ip = NULL);
 	virtual	bool Bind(short port, CBF_IRConnect cbf, long param = 0);
 	virtual	bool Bind(short port, char* ip , CBF_IRConnect cbf, long param = 0);
@@ -69,7 +70,9 @@ public:
 	long parameter;
 	SOCKET socket;
 	struct sockaddr_in addrfrom;
-        struct sockaddr_in	address;
+    struct sockaddr_in	addSrv;
+
+		
 private:
 	HANDLE handle;
 
