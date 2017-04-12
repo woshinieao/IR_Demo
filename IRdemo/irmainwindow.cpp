@@ -4,7 +4,6 @@
 long CmdCallBack(long lData, long lParam)
 {
 
-    printf("yyyyyyyyyyyyyyyyyyyyyyyyy\n");
 	return 0;
 }
 
@@ -20,11 +19,20 @@ IrMainWindow::IrMainWindow(QWidget *parent): QMainWindow(parent)
 	
 	connect(btn_connect,SIGNAL(clicked()),this,SLOT(Connect()));
 	connect(btn_disconnect,SIGNAL(clicked()),this,SLOT(Disconnect()));
+	connect(btn_calibrate,SIGNAL(clicked()),this,SLOT(Calibrate()));
+	connect(btn_set,SIGNAL(clicked()),this,SLOT(DevSet()));
+
+	
 	connect(btn_play,SIGNAL(clicked()),playwidget,SLOT(Play()));
 	connect(btn_stop,SIGNAL(clicked()),playwidget,SLOT(Stop()));
-    connect(btn_calibrate,SIGNAL(clicked()),this,SLOT(Calibrate()));
 	connect(btn_pic,SIGNAL(clicked()),playwidget,SLOT(GrapPicture()));
 	connect(cbox_palette,SIGNAL(currentIndexChanged(int)),playwidget,SLOT(FramePalette(int)));
+	connect(brn_draw,SIGNAL(clicked()),playwidget,SLOT(DrawRect()));
+
+	connect(btn_point,SIGNAL(clicked()),playwidget,SLOT(PointTemperature()));
+
+	
+	
 	
 }
 
@@ -56,6 +64,13 @@ qDebug()<<"aaaaaaaaaaa tttttttttttttttt";
 }
 
 
+
+int IrMainWindow::DevSet()
+{
+
+	return 0;
+
+}
 
 
 IrMainWindow::~IrMainWindow()

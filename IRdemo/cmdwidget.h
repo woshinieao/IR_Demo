@@ -1,8 +1,8 @@
-#ifdef _CMDWIDGET_H
-#define _CMDWIDGET_H
+#ifndef __CMDWIDGET_H
+#define __CMDWIDGET_H
 
 
-
+#include "ui_cmdwidget.h"
 
 
 
@@ -41,7 +41,7 @@ typedef enum enumCommand{
  msgSetIntTime            = 67, //积分时间
  msgSetGain               = 68, //增益
  msgSetSADDelay           = 69, //AD延时
- msgGetFpaTemp            = 70, //
+ msgGetFpgaTemp            = 70, //
  msgSetAutoGSKSwitch      = 71, //自动调整GSK
  msgVideoSrcSel           = 72, //输出图像
  msgCal                   = 73, //校准
@@ -154,6 +154,25 @@ typedef enum enumCommand{
 
 
 
+
+
+
+
+
+
+class CmdWidget:public QWidget,public Ui_CmdWidget
+{
+	Q_OBJECT
+public:
+	CmdWidget(QWidget *parent = 0);	
+	~CmdWidget();
+	
+signals:
+	
+public slots:
+private:
+	
+};
 
 
 

@@ -14,6 +14,17 @@
 #include "IRPalette.h"
 
 #define HIST_SIZE 32768
+#define MAX_OBJ_NUM 9
+
+typedef enum enumDrawMode
+{
+	DRAW_NO = 0,
+	DRAW_RECT = 1,
+	DRAW_POINT = 2,
+	DRAW_MOVE = 3,
+	
+} eDrawMode;
+
 
 
 typedef struct BITMAPFILEHEADER  
@@ -69,6 +80,8 @@ typedef enum enumParameter
 	PARAM_MIN_TEMP,
 	PARAM_MAX_X,
 	PARAM_MAX_Y,
+	PARAM_MIN_X,
+	PARAM_MIN_Y,
 	PARAM_COUNT
 } eParameter;
 
@@ -80,6 +93,15 @@ typedef struct tagCovertFrame
 } CovertFrame;
 
 
+typedef struct tagRectInfo
+{
+	int x;
+	int y;
+	int h;
+	int w;
+	int max;
+	int min;
+} tRectInfo;
 
 
 
@@ -116,9 +138,13 @@ public slots:
     int FrameConvert();
     int FrameRecv(Frame *pframe);
 	int GrapPicture();
+	int PointTemperature();
+	int DrawRect();
 	int SetHistParam(short Param1, short Param2, short Param3, short Param4, short Param5);
 	int Histogram(UINT16 *p, UINT16 u16Max, UINT16 u16Min, UINT16 u16Width, UINT16 u16Hight, UINT16 *QuanMax, UINT16 *QuanMin, UINT16 *NrBins, UINT16 u16Param4, UINT16 u16Param5);
-
+	void mousePressEvent(QMouseEvent *event);
+	void mouseMoveEvent(QMouseEvent *event);
+	void mouseReleaseEvent(QMouseEvent* event);		//将画图或者是改变大小及移动的rect坐标调整为正数
 	void paintEvent(QPaintEvent *event);
 
 
@@ -134,7 +160,17 @@ private:
 	UINT8	u8SensorType;
 
 	QPen pen;
-
+	QLabel lb_point;
+	QLabel *label_rect[MAX_OBJ_NUM];
+	QRect  m_rectObj[MAX_OBJ_NUM];
+	QPoint before_pos; 		     //记录鼠标初始位置
+	QPoint current_pos; 		  //记录鼠标当前位置
+	tRectInfo  m_rectInfo[MAX_OBJ_NUM];
+	eDrawMode flag_draw;//用来标记什么时候开始画矩形
+	int flag_findnum;//用来标记移动、改变大小的矩形
+	int  m_iObjNum;	//用来记录图形框的数量，以判断图形数量是否达到最大值
+	int flag_width;		//记录图形改变前的宽度
+	int flag_height;		//记录图形改变前的高度
 
 };
 

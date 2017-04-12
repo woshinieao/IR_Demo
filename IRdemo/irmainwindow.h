@@ -25,6 +25,7 @@ public slots:
 	int Connect();
     int Disconnect();
     int Calibrate();
+	int DevSet();
 private:
 
 	QString ir_ip;

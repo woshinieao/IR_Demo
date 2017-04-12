@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
+ <class>CmdWidget</class>
+ <widget class="QWidget" name="CmdWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -29,13 +29,13 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
        <string>连接</string>
       </attribute>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <property name="geometry">
         <rect>
          <x>240</x>
@@ -354,30 +354,6 @@
         </item>
        </layout>
       </widget>
-      <zorder>pushButton</zorder>
-      <zorder>pushButton_2</zorder>
-      <zorder>pushButton_3</zorder>
-      <zorder>pushButton_4</zorder>
-      <zorder>pushButton_5</zorder>
-      <zorder>pushButton_6</zorder>
-      <zorder>pushButton_7</zorder>
-      <zorder>pushButton_8</zorder>
-      <zorder>label</zorder>
-      <zorder>label_2</zorder>
-      <zorder>label_3</zorder>
-      <zorder>label_4</zorder>
-      <zorder>lineEdit</zorder>
-      <zorder>lineEdit_2</zorder>
-      <zorder>lineEdit_3</zorder>
-      <zorder>lineEdit_4</zorder>
-      <zorder>pushButton_3</zorder>
-      <zorder>pushButton_4</zorder>
-      <zorder>label_3</zorder>
-      <zorder>lineEdit_3</zorder>
-      <zorder>lineEdit_4</zorder>
-      <zorder>pushButton_6</zorder>
-      <zorder>label_4</zorder>
-      <zorder>groupBox</zorder>
      </widget>
      <widget class="QWidget" name="tab_2">
       <attribute name="title">

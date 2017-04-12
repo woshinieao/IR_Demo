@@ -989,12 +989,26 @@ long  FrameCallBack(long lData, long lParam)
 PlayWidget::PlayWidget(QWidget *parent)
     : QWidget(parent)
 {
+	flag_draw  =DRAW_NO;
+	m_iObjNum = 0;
 	pen.setWidth(3);
 	pen.setColor(Qt::red);
     pFrame = NULL;
     pCBFframe = &FrameCallBack;
+	char R[10];
+	for(int num=0;num< MAX_OBJ_NUM;num++)
+	{
+		sprintf(R,"R:%d",num);
+		label_rect[num] = new  QLabel(R,this,0);
+		label_rect[num]->setAttribute(Qt::WA_TranslucentBackground);
+		label_rect[num]->hide();
+	}
+	lb_point.setParent(this);
+	lb_point.setAttribute(Qt::WA_TranslucentBackground);
+	lb_point.hide();
     FrameHeader();
     FramePalette(0);
+	
 	
 }
 
@@ -1398,12 +1412,15 @@ int PlayWidget::FrameConvert()
 int PlayWidget::FrameConvert()
 {
 	USHORT p[MAX_COUNT];
-	int m = 0, max = HIST_SIZE - 1, min = 0;
+	int  max = HIST_SIZE - 1, min = 0;
 	if(pFrame ==NULL)
 	{
 	    return -1;
 	}
     memcpy(p, pFrame->buffer, sizeof(pFrame->buffer) );
+
+
+/*	
 	for (int i = 5; i < pFrame->width - 4; i++)
 	{
 		for (int j = 5; j < pFrame->height - 4; j++)
@@ -1414,8 +1431,16 @@ int PlayWidget::FrameConvert()
 				m_Covertframe.iParam[PARAM_MAX_X] = i;
 				m_Covertframe.iParam[PARAM_MAX_Y] = j;
 			}
+			if(l>p[i + pFrame->width * j])
+			{
+				l = p[i + pFrame->width * j];
+				m_Covertframe.iParam[PARAM_MIN_X] = i;
+				m_Covertframe.iParam[PARAM_MIN_Y] = j;
+
+			}
 		}
 	}
+*/
 	int hist[HIST_SIZE];
 	long sum = 0;
 	memset(hist, 0, sizeof(int) * HIST_SIZE);
@@ -1470,26 +1495,38 @@ int PlayWidget::FrameRecv(Frame* pTmp)
 		return -1;
 	pFrame = pTmp;
 	USHORT m = 0, n = 16383;
-
-	
-		for (int j = 0; j < pFrame->height; j++)
+	for (int j = 0; j < pFrame->height; j++)
+	{
+		for (int i = 0; i < pFrame->width; i++)
 		{
-			for (int i = 0; i < pFrame->width; i++)
+			if (m < pFrame->buffer[i + pFrame->width * j])
 			{
-				if (m < pFrame->buffer[i + pFrame->width * j])
+				m = pFrame->buffer[i + pFrame->width * j];
+				m_Covertframe.iParam[PARAM_MAX_X] = i;
+				m_Covertframe.iParam[PARAM_MAX_Y] = j;
+				m_iParam[PARAM_MAX_TEMP] = m;
+			}
+
+			
+			if (n > pFrame->buffer[i + pFrame->width * j])
+			{
+				n = pFrame->buffer[i + pFrame->width * j];
+				m_iParam[PARAM_MIN_TEMP] = pFrame->buffer[i + pFrame->width * j];
+				m_Covertframe.iParam[PARAM_MIN_X] = i;
+				m_Covertframe.iParam[PARAM_MIN_Y] = j;
+			}
+			for(int k=0;i<MAX_OBJ_NUM ;k++)
+			{
+				if(m_rectInfo[k].x<i && i<m_rectInfo[k].x+m_rectInfo[k].w && j>m_rectInfo[k].y && j<m_rectInfo[k].y+m_rectInfo[k].h)
 				{
-					m = pFrame->buffer[i + pFrame->width * j];
-					m_Covertframe.iParam[PARAM_MAX_X] = i;
-					m_Covertframe.iParam[PARAM_MAX_Y] = j;
-					m_iParam[PARAM_MAX_TEMP] = m;
+					if(m_rectInfo[k].max<pFrame->buffer[i + pFrame->width * j])
+						m_rectInfo[k].max =pFrame->buffer[i + pFrame->width * j];
+					else if(m_rectInfo[k].min>pFrame->buffer[i + pFrame->width * j])
+						m_rectInfo[k].min =pFrame->buffer[i + pFrame->width * j];
 				}
-				if (n > pFrame->buffer[i + pFrame->width * j])
-				{
-					n = pFrame->buffer[i + pFrame->width * j];
-					m_iParam[PARAM_MIN_TEMP] = pFrame->buffer[i + pFrame->width * j];
-				}
-			} 
-		}
+			}	
+		} 
+	}
 	
 		m_iParam[PARAM_FPA_TEMP] = pFrame->u16FpaTemp;
 		m_iParam[PARAM_CEN_TEMP] = pFrame->buffer[(pFrame->height/2 - 1)*pFrame->width + pFrame->width/2];
@@ -1535,11 +1572,9 @@ int PlayWidget::GrapPicture()
 {
     m_file = QDate::currentDate().toString("yyyy.MM.dd")+"-"+ QTime::currentTime().toString("hh.mm.ss")+".bmp";
 	m_grap = true;
-qDebug()<<m_file;
+	qDebug()<<m_file;
 	return 0;
 }
-
-
 
 
 int PlayWidget::Play()
@@ -1557,27 +1592,425 @@ int PlayWidget::Stop()
 	return 0;
 }
 
-void PlayWidget::paintEvent(QPaintEvent *)
+int PlayWidget::DrawRect()
 {
-    if(m_play == false)
-        return;
-	QPainter painterImage(this);
-	QRect rect_image(0,0,this->width(),this->height());
-	QImage pixImg;
-    mutex_bmp.lock();
-    pixImg.loadFromData((unsigned char *)&m_Bmpfile,sizeof(BMPFLIE),0);
-	painterImage.drawImage(rect_image,pixImg);
-	if(m_grap)
+	flag_draw = DRAW_RECT;
+	return 0;
+}
+
+int PlayWidget::PointTemperature()
+{
+
+	flag_draw = DRAW_POINT;
+	return 0;
+
+}
+
+
+void PlayWidget::mousePressEvent(QMouseEvent *event)
+{	
+
+
+	before_pos = event->pos(); //画图获取起始坐标
+	if(event->buttons()==Qt::LeftButton)
 	{
-		pixImg.save(m_file);
-		m_grap = false;
+		if(flag_draw == DRAW_RECT)
+		{
+			m_rectObj[m_iObjNum].setLeft(before_pos.x());
+			m_rectObj[m_iObjNum].setTop(before_pos.y());
+			m_rectObj[m_iObjNum].setWidth(0) ;
+			m_rectObj[m_iObjNum].setHeight(0) ;
+			m_iObjNum++;
+		}
+		else if(flag_draw == DRAW_POINT)
+		{
+		
+			lb_point.show();
+			lb_point.setGeometry(event->pos().x() ,event->pos().y()-20 ,50,30 );
+			lb_point.setText(QString::number(event->pos().x())+":"+QString::number(event->pos().y()));
+
+		}
+		else 
+		{
+			//图形大小改变定位
+			for(int i=0;i<m_iObjNum;i++)
+			{	
+				if((before_pos.x()>m_rectObj[i].left()) && (before_pos.x()<m_rectObj[i].left()+m_rectObj[i].width())
+					&& (before_pos.y()>m_rectObj[i].top()) && (before_pos.y()<m_rectObj[i].top()+m_rectObj[i].height()))
+				{
+					flag_findnum = i;
+					flag_width = m_rectObj[flag_findnum].width();
+					flag_height = m_rectObj[flag_findnum].height();
+					return;
+				}
+				else 
+					flag_findnum = -1;
+			}
+		}
+	}
+	else if(event->buttons()==Qt::RightButton) //图形移动定位
+	{
+		for(int i=0;i<m_iObjNum;i++)
+		{
+			if((before_pos.x()>m_rectObj[i].left()) && (before_pos.x()<m_rectObj[i].left()+m_rectObj[i].width())
+				&& (before_pos.y()>m_rectObj[i].top()) && (before_pos.y()<m_rectObj[i].top()+m_rectObj[i].height()))
+			{
+				flag_findnum = i;
+				return;
+			}
+			else	if((before_pos.x()>m_rectObj[i].left()) && (before_pos.x()<m_rectObj[i].left()+m_rectObj[i].width())
+				&& (before_pos.y()<m_rectObj[i].top()) && (before_pos.y()>m_rectObj[i].top()+m_rectObj[i].height()))
+			{
+				flag_findnum = i;
+				return;
+			}
+			else	if((before_pos.x()<m_rectObj[i].left()) && (before_pos.x()>m_rectObj[i].left()+m_rectObj[i].width())
+				&& (before_pos.y()>m_rectObj[i].top()) && (before_pos.y()<m_rectObj[i].top()+m_rectObj[i].height()))
+			{
+				flag_findnum = i;
+				return;
+			}
+			else	if((before_pos.x()<m_rectObj[i].left()) && (before_pos.x()>m_rectObj[i].left()+m_rectObj[i].width())
+				&& (before_pos.y()<m_rectObj[i].top()) && (before_pos.y()>m_rectObj[i].top()+m_rectObj[i].height()))
+			{
+				flag_findnum = i;
+				return;
+			}
+			else 
+				flag_findnum = -1;
+		}
+	}
+}
+
+
+void PlayWidget::mouseMoveEvent(QMouseEvent *event)
+{	
+	current_pos=event->pos();
+	int x,y;
+	if(event->buttons()==Qt::LeftButton)
+	{	
+		if(flag_draw == DRAW_RECT)
+		{
+			if(current_pos.x()>0 && current_pos.x()<this->width()
+				&& current_pos.y()>0 && current_pos.y()<this->height())
+			{
+				x = current_pos.x()-before_pos.x();
+				y = current_pos.y()-before_pos.y();
+				int left	 = m_rectObj[m_iObjNum-1].left();
+				int top 	=  m_rectObj[m_iObjNum-1].top();
+				int width  =x;
+				int height =y;	
+				m_rectObj[m_iObjNum-1].setLeft(left) ;
+				m_rectObj[m_iObjNum-1].setTop(top) ;
+				m_rectObj[m_iObjNum-1].setWidth(width) ;
+				m_rectObj[m_iObjNum-1].setHeight(height) ;				
+				if(m_rectObj[m_iObjNum-1].y()<30)
+					label_rect[m_iObjNum-1]->setGeometry(m_rectObj[m_iObjNum-1].left() ,m_rectObj[m_iObjNum-1].top()+m_rectObj[m_iObjNum-1].height(),100,30 );
+				else
+					label_rect[m_iObjNum-1]->setGeometry(m_rectObj[m_iObjNum-1].left() ,m_rectObj[m_iObjNum-1].top()-30 ,100,30 );	
+				label_rect[m_iObjNum-1]->show();
+
+				
+				
+
+			}	
+		}
+		else if(flag_draw == DRAW_POINT)
+		{
+			lb_point.setGeometry(event->pos().x() ,event->pos().y()-20,50,30 );
+			lb_point.setText(QString::number(event->pos().x())+":"+QString::number(event->pos().y()));
+
+		}
+		else 
+		{
+			//改变图形的大小
+			if(flag_findnum == -1)
+				return;
+			int x,y;
+			x= current_pos.x()-before_pos.x();	
+			y= current_pos.y()-before_pos.y();
+			int left	 = m_rectObj[flag_findnum].left();
+			int top 	=  m_rectObj[flag_findnum].top();
+			int width=m_rectObj[flag_findnum].width()+x;
+			int height =m_rectObj[flag_findnum].height()+y;
+			if(left+width<0)
+				width = -left;
+			if(top+height<0)
+				height = -top;
+			m_rectObj[flag_findnum].setLeft(left);
+			m_rectObj[flag_findnum].setTop(top);
+			m_rectObj[flag_findnum].setWidth(width);
+			m_rectObj[flag_findnum].setHeight(height);
+			
+			if(top<30)
+				label_rect[flag_findnum]->setGeometry(m_rectObj[flag_findnum].left(),m_rectObj[flag_findnum].top()+m_rectObj[flag_findnum].height(),100,30 );
+			else
+				label_rect[flag_findnum]->setGeometry(m_rectObj[flag_findnum].left(),m_rectObj[flag_findnum].top()-30,100,30 );
+			label_rect[flag_findnum]->show();	
+			before_pos =event->pos();	
+		}				
+	}
+	else if(event->buttons()==Qt::RightButton)		
+	{
+		if(flag_findnum == -1)
+			return;
+		int x,y;
+		x= current_pos.x()-before_pos.x();	
+		y= current_pos.y()-before_pos.y();
+		int left	 = m_rectObj[flag_findnum].left();
+		int top 	=  m_rectObj[flag_findnum].top();
+		int width  =m_rectObj[flag_findnum].width();
+		int height =m_rectObj[flag_findnum].height();
+		
+		left = left+x;
+		top = top+y;
+		if(left<0)
+			left = 0;
+		if(left+width>this->width())
+			left = this->width()-width;
+		if(top<0)
+			top = 0;
+		if(top+height>this->height())
+			top = this->height()-height;
+
+		
+		m_rectObj[flag_findnum].setLeft(left) ;
+		m_rectObj[flag_findnum].setTop(top) ;
+		m_rectObj[flag_findnum].setWidth(width) ;
+		m_rectObj[flag_findnum].setHeight(height) ;
+
+		qDebug()<<"left:"<<m_rectObj[flag_findnum].left(); 
+		qDebug()<<"right:"<<m_rectObj[flag_findnum].right();
+		qDebug()<<"widht:"<<m_rectObj[flag_findnum].width();
+		qDebug()<<"height:"<<m_rectObj[flag_findnum].height();
+
+
+		
+		if(top<30)
+			label_rect[flag_findnum]->setGeometry(left ,top+height,100,30 );
+		else
+			label_rect[flag_findnum]->setGeometry(left ,top-30,100,30 );
+		label_rect[flag_findnum]->show();
+		before_pos =event->pos();							
 	}
 
-	painterImage.setPen(pen);
-    painterImage.drawLine(m_Covertframe.iParam[PARAM_MAX_X]-5,m_Covertframe.iParam[PARAM_MAX_Y],m_Covertframe.iParam[PARAM_MAX_X]+5,m_Covertframe.iParam[PARAM_MAX_Y]);
-    painterImage.drawLine(m_Covertframe.iParam[PARAM_MAX_X],m_Covertframe.iParam[PARAM_MAX_Y]-5,m_Covertframe.iParam[PARAM_MAX_X],m_Covertframe.iParam[PARAM_MAX_Y]+5);
-	mutex_bmp.unlock();
-	painterImage.end();                        //释放资源因为只是一直往上画，没有释放，使电脑卡死
+	this->update();
+}
+
+
+
+void PlayWidget::mouseReleaseEvent(QMouseEvent* /*event*/)		//将画图或者是改变大小及移动的rect坐标调整为正数
+{
+	
+	if(flag_draw ==DRAW_RECT)
+	{//调整画图的坐标参数
+		int left   = m_rectObj[m_iObjNum-1].left();
+		int top    = m_rectObj[m_iObjNum-1].top();
+		int width  = m_rectObj[m_iObjNum-1].width();
+		int height = m_rectObj[m_iObjNum-1].height();		
+		if(width<0)
+		{
+			left = left+width;		
+			width=-width;
+		}
+		if(height<0)
+		{
+			top = height+top;
+			height= -height;
+		}
+	
+		if(width < 31)
+		{
+			
+			int ret =QMessageBox::warning(this,"警告","测温对象的宽度范围太小! \n","确定","取消");
+			if(ret == QMessageBox::AcceptRole)
+			{
+			width = 32; 			
+			}
+			else
+			{
+				m_rectObj[m_iObjNum-1].setLeft(0) ;
+				m_rectObj[m_iObjNum-1].setTop(0) ;
+				m_rectObj[m_iObjNum-1].setWidth(0) ;
+				m_rectObj[m_iObjNum-1].setHeight(0) ;
+				label_rect[m_iObjNum-1]->hide();
+				m_iObjNum--;
+				return;
+			}
+		}
+		if(height < 31)
+		{
+			
+			int ret =QMessageBox::warning(this,"警告","测温对象的高度范围太小! \n","确定","取消");
+			if(ret == QMessageBox::AcceptRole)
+			{
+				height = 32;					
+			}
+			else
+			{
+					m_rectObj[m_iObjNum-1].setLeft(0) ;
+					m_rectObj[m_iObjNum-1].setTop(0) ;
+					m_rectObj[m_iObjNum-1].setWidth(0) ;
+					m_rectObj[m_iObjNum-1].setHeight(0) ;
+					if(m_iObjNum>0)
+					{	
+						label_rect[m_iObjNum-1]->hide();
+						m_iObjNum--;
+					}
+					return;
+			}
+		}
+				
+		m_rectObj[m_iObjNum-1].setLeft(left) ;
+		m_rectObj[m_iObjNum-1].setTop(top) ;
+		m_rectObj[m_iObjNum-1].setWidth(width) ;
+		m_rectObj[m_iObjNum-1].setHeight(height) ;
+		if(m_rectObj[m_iObjNum-1].y()<30)
+			label_rect[m_iObjNum-1]->setGeometry(m_rectObj[m_iObjNum-1].left() ,m_rectObj[m_iObjNum-1].top()+m_rectObj[m_iObjNum-1].height(),100,30 );
+		else
+			label_rect[m_iObjNum-1]->setGeometry(m_rectObj[m_iObjNum-1].left() ,m_rectObj[m_iObjNum-1].top()-30 ,100,30 );
+
+	}
+	else if(flag_draw == DRAW_POINT)
+	{
+		lb_point.hide();
+		lb_point.setText(" ");
+
+	}
+	else 
+	{
+		//调整移动和改变大小的图形坐标参数
+		if(flag_findnum ==-1)
+				return;
+		int left	 = m_rectObj[flag_findnum].left();
+		int top 	=  m_rectObj[flag_findnum].top();
+		int width=m_rectObj[flag_findnum].width();
+		int height =m_rectObj[flag_findnum].height();
+		
+		if(width<0)
+		{
+			left = left+width;
+			width = -width;
+		}
+		if(height<0)
+		{
+			top = top +height;
+			height = -height;
+		}
+
+		if(left<5)
+			left = 5;
+
+		if(top<5)
+			top = 5;
+
+			if(width < 31 ) 
+			{				
+				int ret =QMessageBox::warning(this,"warning","width is too small !\n","OK","cancel");
+				if(ret == QMessageBox::AcceptRole)
+				{
+					width = 32; 				
+				}
+				else
+				{
+					width =flag_width;
+					height=flag_height ;	
+				}
+			}
+			if(height < 31 )	
+			{				
+				int ret = QMessageBox::warning(this,"warning","height is too low!\n","OK","cancel");
+				if(ret == QMessageBox::AcceptRole)
+				{
+					height = 32;					
+				}
+				else
+				{
+					width =flag_width;
+					height=flag_height ;
+				}
+			}
+
+		/*************************聂鳌 修改时间2013-10-24*********************************************************************/
+			if(left+width>this->width() - 5)
+				width = this->width()-left-5;
+
+			if(top+height>this->height() - 5)
+				height =	this->height()-top-5;
+
+	/*************************聂鳌 修改时间2013-10-24*********************************************************************/
+
+		m_rectObj[flag_findnum].setLeft(left);
+		m_rectObj[flag_findnum].setTop(top);
+		m_rectObj[flag_findnum].setWidth(width);
+		m_rectObj[flag_findnum].setHeight(height);
+		if(top<30)
+			label_rect[flag_findnum]->setGeometry(m_rectObj[flag_findnum].left(),m_rectObj[flag_findnum].top()+m_rectObj[flag_findnum].height(),100,30 );
+		else
+			label_rect[flag_findnum]->setGeometry(m_rectObj[flag_findnum].left(),m_rectObj[flag_findnum].top()-30,100,30 );
+	}
+	flag_height = 0;
+	flag_width = 0;
+	flag_findnum = -1;
+	flag_draw =DRAW_NO; 
+/*
+	if(m_iObjNum>0)
+	for(int i=0;i<MAX_OBJ_NUM ;i++)
+	{
+		m_rectInfo[i].x	=m_rectObj[i].left()*this->width()/pFrame->width;
+		m_rectInfo[i].y =m_rectObj[i].top()*this->height()/pFrame->height;
+		m_rectInfo[i].w =m_rectObj[i].width()*this->width()/pFrame->width;
+		m_rectInfo[i].h =m_rectObj[i].height()*this->height()/pFrame->height;
+	}
+*/	
+	update();	
+}
+
+
+void PlayWidget::paintEvent(QPaintEvent *)
+{
+    if(m_play == true)
+	{
+		QPainter painterImage(this);
+		QRect rect_image(0,0,this->width(),this->height());
+		QImage pixImg;
+	    mutex_bmp.lock();
+	    pixImg.loadFromData((unsigned char *)&m_Bmpfile,sizeof(BMPFLIE),0);
+		painterImage.drawImage(rect_image,pixImg);
+		if(m_grap)
+		{
+			pixImg.save(m_file);
+			m_grap = false;
+		}
+
+		painterImage.setPen(pen);
+	    painterImage.drawLine(m_Covertframe.iParam[PARAM_MAX_X]-5,m_Covertframe.iParam[PARAM_MAX_Y],m_Covertframe.iParam[PARAM_MAX_X]+5,m_Covertframe.iParam[PARAM_MAX_Y]);
+	    painterImage.drawLine(m_Covertframe.iParam[PARAM_MAX_X],m_Covertframe.iParam[PARAM_MAX_Y]-5,m_Covertframe.iParam[PARAM_MAX_X],m_Covertframe.iParam[PARAM_MAX_Y]+5);
+		mutex_bmp.unlock();
+	 	painterImage.end();
+	}
+
+
+	QPainter painterImage(this);
+			QRect rect_image(0,0,this->width(),this->height());
+			QImage pixImg;
+
+	pixImg.load("bmp/1.bmp");
+	painterImage.drawImage(rect_image,pixImg);
+
+
+	
+	QPainter painterRect(this);
+
+	painterRect.setPen(Qt::red);
+	
+	for(int rectNum = 0;rectNum< MAX_OBJ_NUM;rectNum++)
+	{
+
+		painterRect.drawRect(m_rectObj[rectNum]);
+	}
+	
+	painterRect.end();                        //释放资源因为只是一直往上画，没有释放，使电脑卡死
 	return ;
 
 }
