@@ -128,7 +128,8 @@ public:
 	bool m_grap;
 	
 	QString m_file;
-
+    QTimer timer;
+    int iframnum;
     friend long FrameCallBack(long lData, long lParam);
 
 public slots:
@@ -139,6 +140,7 @@ public slots:
     int FrameConvert();
     int FrameRecv(Frame *pframe);
 
+       void TimeSecond();
 	int ContrlMode(int );
 	int GrapPicture();
 	int PointTemperature();
@@ -167,6 +169,7 @@ private:
 	QPen pen;
 	QLabel lb_point;
 	QLabel *label_rect[MAX_OBJ_NUM];
+    QLabel *lbFrameNum;
 	QRect  m_rectObjTemp[MAX_OBJ_NUM];
 	QRect  m_rectObj[MAX_OBJ_NUM];
 	QPoint before_pos; 		     //记录鼠标初始位置
@@ -178,6 +181,7 @@ private:
 	int flag_width;		//记录图形改变前的宽度
 	int flag_height;		//记录图形改变前的高度
 	int ctrl_mode;
+    int ttt;
 };
 
 #endif

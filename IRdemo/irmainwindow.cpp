@@ -31,8 +31,8 @@ IrMainWindow::IrMainWindow(QWidget *parent): QMainWindow(parent)
 
 	connect(btn_point,SIGNAL(clicked()),playwidget,SLOT(PointTemperature()));
 	connect(btn_rectClear,SIGNAL(clicked()),playwidget,SLOT(CleanRect()));
+    connect(btn_save,SIGNAL(clicked()),playwidget,SLOT(SaveRect()));
 
-	
 	connect(toolBox,SIGNAL(currentChanged(int)),playwidget,SLOT(ContrlMode(int)));
 	
 	

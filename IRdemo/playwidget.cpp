@@ -978,7 +978,8 @@ long  FrameCallBack(long lData, long lParam)
 	else
     {
         pIRPlayer->pFrame = NULL;
-        delete (Frame *)lData;
+        qDebug()<<" aaaaa   11111111111111111111111111111111111111111";
+       // delete (Frame *)lData;
     }
 
 	return 0;
@@ -991,6 +992,8 @@ PlayWidget::PlayWidget(QWidget *parent)
 {
 	flag_draw  =DRAW_NO;
 	ctrl_mode = 0;
+        ttt = 0;
+        iframnum = 0;
 	m_iObjNum = 0;
 	pen.setWidth(3);
 	pen.setColor(Qt::red);
@@ -1007,6 +1010,21 @@ PlayWidget::PlayWidget(QWidget *parent)
 	lb_point.setParent(this);
 	lb_point.setAttribute(Qt::WA_TranslucentBackground);
 	lb_point.hide();
+
+    lbFrameNum = new  QLabel(this);
+    lbFrameNum->setAttribute(Qt::WA_TranslucentBackground);
+    lbFrameNum->hide();
+connect(&timer,SIGNAL(timeout()),this,SLOT(TimeSecond()));
+
+    for(int it=0;it<MAX_OBJ_NUM;it++)
+    {
+        m_rectInfo[it].max = 0;
+        m_rectInfo[it].min = 0;
+        m_rectInfo[it].x = 0;
+        m_rectInfo[it].y = 0;
+        m_rectInfo[it].w = 0;
+        m_rectInfo[it].h = 0;
+    }
     FrameHeader();
     FramePalette(0);
 	
@@ -1489,9 +1507,15 @@ int PlayWidget::FrameConvert()
 }
 #endif	
 
+void PlayWidget::TimeSecond()
+{
+    lbFrameNum->setText(QString::number(iframnum)+" FPS");
+    iframnum = 0;
+}
 
 int PlayWidget::FrameRecv(Frame* pTmp)
 {
+    iframnum++;
 	if(pTmp == NULL)
 		return -1;
 	pFrame = pTmp;
@@ -1500,7 +1524,7 @@ int PlayWidget::FrameRecv(Frame* pTmp)
 	{
 		for (int i = 0; i < pFrame->width; i++)
 		{
-			if (m < pFrame->buffer[i + pFrame->width * j])
+                if (m < pFrame->buffer[i + pFrame->width * j])
 			{
 				m = pFrame->buffer[i + pFrame->width * j];
 				m_Covertframe.iParam[PARAM_MAX_X] = i;
@@ -1508,7 +1532,7 @@ int PlayWidget::FrameRecv(Frame* pTmp)
 				m_iParam[PARAM_MAX_TEMP] = m;
 			}
 
-			
+
 			if (n > pFrame->buffer[i + pFrame->width * j])
 			{
 				n = pFrame->buffer[i + pFrame->width * j];
@@ -1516,18 +1540,37 @@ int PlayWidget::FrameRecv(Frame* pTmp)
 				m_Covertframe.iParam[PARAM_MIN_X] = i;
 				m_Covertframe.iParam[PARAM_MIN_Y] = j;
 			}
-			for(int k=0;i<MAX_OBJ_NUM ;k++)
-			{
-				if(m_rectInfo[k].x<i && i<m_rectInfo[k].x+m_rectInfo[k].w && j>m_rectInfo[k].y && j<m_rectInfo[k].y+m_rectInfo[k].h)
-				{
-					if(m_rectInfo[k].max<pFrame->buffer[i + pFrame->width * j])
-						m_rectInfo[k].max =pFrame->buffer[i + pFrame->width * j];
-					else if(m_rectInfo[k].min>pFrame->buffer[i + pFrame->width * j])
-						m_rectInfo[k].min =pFrame->buffer[i + pFrame->width * j];
-				}
-			}	
-		} 
-	}
+
+
+/*
+            if(ttt ==1)
+            {
+                for(int it=0;it<m_iObjNum ;it++)
+                {
+                        if(m_rectInfo[it].x>i && i<(m_rectInfo[it].x+m_rectInfo[it].w) && j>m_rectInfo[it].y && j<(m_rectInfo[it].y+m_rectInfo[it].h))
+                        {
+                            if(m_rectInfo[it].max<pFrame->buffer[i + pFrame->width * j])
+                                    m_rectInfo[it].max =pFrame->buffer[i + pFrame->width * j];
+                            else if(m_rectInfo[it].min>pFrame->buffer[i + pFrame->width * j])
+                                    m_rectInfo[it].min =pFrame->buffer[i + pFrame->width * j];
+
+                            qDebug()<<"m_rectInfo[it].x:"<<m_rectInfo[it].x;
+                             qDebug()<<"m_rectInfo[it].y:"<<m_rectInfo[it].y;
+                              qDebug()<<"m_rectInfo[it].w:"<<m_rectInfo[it].w;
+                               qDebug()<<"m_rectInfo[it].h:"<<m_rectInfo[it].h;
+                            qDebug()<<"m_rectInfo[it].max:"<<m_rectInfo[it].max;
+                             qDebug()<<"m_rectInfo[it].min:"<<m_rectInfo[it].min;
+                               qDebug()<<"---------------------------------------------------------  :"<<it;
+
+                        }
+
+                }
+         }
+
+*/
+
+         }
+    }
 	
 		m_iParam[PARAM_FPA_TEMP] = pFrame->u16FpaTemp;
 		m_iParam[PARAM_CEN_TEMP] = pFrame->buffer[(pFrame->height/2 - 1)*pFrame->width + pFrame->width/2];
@@ -1563,6 +1606,7 @@ int PlayWidget::FrameRecv(Frame* pTmp)
     FrameConvert();
     memcpy((void *)&m_Bmpfile,(char *)(&m_FileInfoheader)+2,sizeof(BITMAPINFO)-2);
     memcpy((void *)m_Bmpfile.buffer,(void *)m_Covertframe.buffer,MAX_COUNT);
+
     update();
 	return 0;
 
@@ -1582,6 +1626,9 @@ int PlayWidget::Play()
 {
 	IR_Command(0, COMMAND_PLAY);
  	m_play = true;
+    lbFrameNum->setGeometry(10,5,50,30 );
+    lbFrameNum->show();
+    timer.start(1000);
 	return 0;
 
 }
@@ -1610,16 +1657,21 @@ int PlayWidget::DrawRect()
 
 int PlayWidget::SaveRect()
 {
+    ttt = 1;
 	flag_draw = DRAW_NO;
 	if(pFrame != NULL)
 	for(int i=0;i<MAX_OBJ_NUM ;i++)
 	{
 	
-		m_rectInfo[i].x	=m_rectObjTemp[i].left()*this->width()/pFrame->width;
-		m_rectInfo[i].y =m_rectObjTemp[i].top()*this->height()/pFrame->height;
-		m_rectInfo[i].w =m_rectObjTemp[i].width()*this->width()/pFrame->width;
-		m_rectInfo[i].h =m_rectObjTemp[i].height()*this->height()/pFrame->height;
+        m_rectInfo[i].x	=m_rectObjTemp[i].x()*pFrame->width/this->width();
+        m_rectInfo[i].y =m_rectObjTemp[i].y()*pFrame->height/this->height();
+        m_rectInfo[i].w =m_rectObjTemp[i].width()*pFrame->width/this->width();
+        m_rectInfo[i].h =m_rectObjTemp[i].height()*pFrame->height/this->height();
 	}
+
+
+
+
 	return 0;
 }
 
@@ -1637,6 +1689,7 @@ int PlayWidget::CleanRect()
 		label_rect[i]->hide();
 	}
 	m_iObjNum = 0;
+       ttt = 0;
 	flag_draw = DRAW_NO;
 	update();
 	return 0;
@@ -1739,28 +1792,36 @@ if(ctrl_mode != DRAW_MODE)
 	{	
 		if(flag_draw == DRAW_RECT)
 		{
+
+            qDebug()<<"m_iObjNum:"<<m_iObjNum;
+
 			if(current_pos.x()>0 && current_pos.x()<this->width()
 				&& current_pos.y()>0 && current_pos.y()<this->height())
 			{
 				x = current_pos.x()-before_pos.x();
 				y = current_pos.y()-before_pos.y();
-				int left	 = m_rectObjTemp[m_iObjNum-1].left();
-				int top 	=  m_rectObjTemp[m_iObjNum-1].top();
+                int left	 = m_rectObjTemp[m_iObjNum-1].left();
+                int top 	=  m_rectObjTemp[m_iObjNum-1].top();
 				int width  =x;
 				int height =y;	
-				m_rectObjTemp[m_iObjNum-1].setLeft(left) ;
-				m_rectObjTemp[m_iObjNum-1].setTop(top) ;
-				m_rectObjTemp[m_iObjNum-1].setWidth(width) ;
-				m_rectObjTemp[m_iObjNum-1].setHeight(height) ;				
+                m_rectObjTemp[m_iObjNum-1].setLeft(left) ;
+                m_rectObjTemp[m_iObjNum-1].setTop(top) ;
+                m_rectObjTemp[m_iObjNum-1].setWidth(width) ;
+                m_rectObjTemp[m_iObjNum-1].setHeight(height) ;
 				if(m_rectObjTemp[m_iObjNum-1].y()<30)
 					label_rect[m_iObjNum-1]->setGeometry(m_rectObjTemp[m_iObjNum-1].left() ,m_rectObjTemp[m_iObjNum-1].top()+m_rectObjTemp[m_iObjNum-1].height(),100,30 );
 				else
 					label_rect[m_iObjNum-1]->setGeometry(m_rectObjTemp[m_iObjNum-1].left() ,m_rectObjTemp[m_iObjNum-1].top()-30 ,100,30 );	
 				label_rect[m_iObjNum-1]->show();
+/*
+                qDebug()<<"left:"<<m_rectObjTemp[flag_findnum].left();
+                qDebug()<<"right:"<<m_rectObjTemp[flag_findnum].right();
+                qDebug()<<"widht:"<<m_rectObjTemp[flag_findnum].width();
+                qDebug()<<"height:"<<m_rectObjTemp[flag_findnum].height();
 
-				
-				
-
+                qDebug()<<"x:"<<m_rectObjTemp[flag_findnum].x();
+                qDebug()<<"y:"<<m_rectObjTemp[flag_findnum].y();
+*/
 			}	
 		}
 		else if(flag_draw == DRAW_POINT)
@@ -1827,10 +1888,7 @@ if(ctrl_mode != DRAW_MODE)
 		m_rectObjTemp[flag_findnum].setWidth(width) ;
 		m_rectObjTemp[flag_findnum].setHeight(height) ;
 
-		qDebug()<<"left:"<<m_rectObjTemp[flag_findnum].left(); 
-		qDebug()<<"right:"<<m_rectObjTemp[flag_findnum].right();
-		qDebug()<<"widht:"<<m_rectObjTemp[flag_findnum].width();
-		qDebug()<<"height:"<<m_rectObjTemp[flag_findnum].height();
+
 
 
 		
@@ -1842,7 +1900,7 @@ if(ctrl_mode != DRAW_MODE)
 		before_pos =event->pos();							
 	}
 
-	this->update();
+
 }
 
 
@@ -2008,7 +2066,7 @@ if(ctrl_mode != DRAW_MODE)
 
 
 	
-	update();	
+
 }
 
 
@@ -2031,7 +2089,8 @@ void PlayWidget::paintEvent(QPaintEvent *)
 		painterImage.setPen(pen);
 	    painterImage.drawLine(m_Covertframe.iParam[PARAM_MAX_X]-5,m_Covertframe.iParam[PARAM_MAX_Y],m_Covertframe.iParam[PARAM_MAX_X]+5,m_Covertframe.iParam[PARAM_MAX_Y]);
 	    painterImage.drawLine(m_Covertframe.iParam[PARAM_MAX_X],m_Covertframe.iParam[PARAM_MAX_Y]-5,m_Covertframe.iParam[PARAM_MAX_X],m_Covertframe.iParam[PARAM_MAX_Y]+5);
-		mutex_bmp.unlock();
+
+        mutex_bmp.unlock();
 	 	painterImage.end();
 	}
 
