@@ -63,7 +63,7 @@ public:
 	virtual	bool Bind(short port, char* ip = NULL);
 	virtual	bool Bind(short port, CBF_IRConnect cbf, long param = 0);
 	virtual	bool Bind(short port, char* ip , CBF_IRConnect cbf, long param = 0);
-	bool Send(unsigned char* command, int length);
+	bool Send( char* command, int length);
 	bool Close();
 	bool run;
 	CBF_IRConnect callback;

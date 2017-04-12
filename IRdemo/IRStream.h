@@ -71,7 +71,7 @@ public:
 	virtual bool Init(int port, CBF_IR cbf, long param = 0);
 	virtual bool Init(int port, char* ip, CBF_IR cbf_stm, CBF_IR cbf_cmd, long param = 0);
 	virtual bool Command(eCommand command);
-	virtual bool Command(unsigned char* command, int length);
+	virtual bool Command( char* command, int length);
 	virtual IpAddr IpAddrInqure();
 
 	UINT8  u8SensorType;

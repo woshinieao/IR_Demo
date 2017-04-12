@@ -966,7 +966,6 @@ BYTE paletteList[] = {
 long  FrameCallBack(long lData, long lParam)
 {
 
-    //printf(" FrameRcvThread  -> FrameCallBack     \n");
     PlayWidget* pIRPlayer = (PlayWidget*)lParam;
     if( pIRPlayer->m_play == false)
         return 0;
@@ -1050,7 +1049,6 @@ int PlayWidget::FramePalette(int index)
 {
 	if(index >8)
 		return -1;
-	printf("palette index :%d\n",index);
 	for (int i = 0; i <= 255; i++)
 	{
         m_FileInfoheader.info.bmiColors[i].rgbRed   = paletteList[(index * 256 + i) * 3 + 0];
