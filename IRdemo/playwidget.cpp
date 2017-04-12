@@ -990,6 +990,7 @@ PlayWidget::PlayWidget(QWidget *parent)
     : QWidget(parent)
 {
 	flag_draw  =DRAW_NO;
+	ctrl_mode = 0;
 	m_iObjNum = 0;
 	pen.setWidth(3);
 	pen.setColor(Qt::red);
@@ -1592,9 +1593,52 @@ int PlayWidget::Stop()
 	return 0;
 }
 
+
+
+
+
+int PlayWidget::ContrlMode(int index)
+{	
+	return ctrl_mode =index;
+}
+
 int PlayWidget::DrawRect()
 {
 	flag_draw = DRAW_RECT;
+	return 0;
+}
+
+int PlayWidget::SaveRect()
+{
+	flag_draw = DRAW_NO;
+	if(pFrame != NULL)
+	for(int i=0;i<MAX_OBJ_NUM ;i++)
+	{
+	
+		m_rectInfo[i].x	=m_rectObjTemp[i].left()*this->width()/pFrame->width;
+		m_rectInfo[i].y =m_rectObjTemp[i].top()*this->height()/pFrame->height;
+		m_rectInfo[i].w =m_rectObjTemp[i].width()*this->width()/pFrame->width;
+		m_rectInfo[i].h =m_rectObjTemp[i].height()*this->height()/pFrame->height;
+	}
+	return 0;
+}
+
+
+
+int PlayWidget::CleanRect()
+{
+	for(int i=0;i<MAX_OBJ_NUM;i++)
+	{
+		m_rectObjTemp[i].setRect(0,0,0,0);
+		m_rectInfo[i].x = 0;
+		m_rectInfo[i].y = 0;
+		m_rectInfo[i].w = 0;
+		m_rectInfo[i].h = 0;
+		label_rect[i]->hide();
+	}
+	m_iObjNum = 0;
+	flag_draw = DRAW_NO;
+	update();
 	return 0;
 }
 
@@ -1610,16 +1654,17 @@ int PlayWidget::PointTemperature()
 void PlayWidget::mousePressEvent(QMouseEvent *event)
 {	
 
-
+if(ctrl_mode != DRAW_MODE)
+	return;
 	before_pos = event->pos(); //画图获取起始坐标
 	if(event->buttons()==Qt::LeftButton)
 	{
 		if(flag_draw == DRAW_RECT)
 		{
-			m_rectObj[m_iObjNum].setLeft(before_pos.x());
-			m_rectObj[m_iObjNum].setTop(before_pos.y());
-			m_rectObj[m_iObjNum].setWidth(0) ;
-			m_rectObj[m_iObjNum].setHeight(0) ;
+			m_rectObjTemp[m_iObjNum].setLeft(before_pos.x());
+			m_rectObjTemp[m_iObjNum].setTop(before_pos.y());
+			m_rectObjTemp[m_iObjNum].setWidth(0) ;
+			m_rectObjTemp[m_iObjNum].setHeight(0) ;
 			m_iObjNum++;
 		}
 		else if(flag_draw == DRAW_POINT)
@@ -1635,12 +1680,12 @@ void PlayWidget::mousePressEvent(QMouseEvent *event)
 			//图形大小改变定位
 			for(int i=0;i<m_iObjNum;i++)
 			{	
-				if((before_pos.x()>m_rectObj[i].left()) && (before_pos.x()<m_rectObj[i].left()+m_rectObj[i].width())
-					&& (before_pos.y()>m_rectObj[i].top()) && (before_pos.y()<m_rectObj[i].top()+m_rectObj[i].height()))
+				if((before_pos.x()>m_rectObjTemp[i].left()) && (before_pos.x()<m_rectObjTemp[i].left()+m_rectObjTemp[i].width())
+					&& (before_pos.y()>m_rectObjTemp[i].top()) && (before_pos.y()<m_rectObjTemp[i].top()+m_rectObjTemp[i].height()))
 				{
 					flag_findnum = i;
-					flag_width = m_rectObj[flag_findnum].width();
-					flag_height = m_rectObj[flag_findnum].height();
+					flag_width = m_rectObjTemp[flag_findnum].width();
+					flag_height = m_rectObjTemp[flag_findnum].height();
 					return;
 				}
 				else 
@@ -1652,26 +1697,26 @@ void PlayWidget::mousePressEvent(QMouseEvent *event)
 	{
 		for(int i=0;i<m_iObjNum;i++)
 		{
-			if((before_pos.x()>m_rectObj[i].left()) && (before_pos.x()<m_rectObj[i].left()+m_rectObj[i].width())
-				&& (before_pos.y()>m_rectObj[i].top()) && (before_pos.y()<m_rectObj[i].top()+m_rectObj[i].height()))
+			if((before_pos.x()>m_rectObjTemp[i].left()) && (before_pos.x()<m_rectObjTemp[i].left()+m_rectObjTemp[i].width())
+				&& (before_pos.y()>m_rectObjTemp[i].top()) && (before_pos.y()<m_rectObjTemp[i].top()+m_rectObjTemp[i].height()))
 			{
 				flag_findnum = i;
 				return;
 			}
-			else	if((before_pos.x()>m_rectObj[i].left()) && (before_pos.x()<m_rectObj[i].left()+m_rectObj[i].width())
-				&& (before_pos.y()<m_rectObj[i].top()) && (before_pos.y()>m_rectObj[i].top()+m_rectObj[i].height()))
+			else	if((before_pos.x()>m_rectObjTemp[i].left()) && (before_pos.x()<m_rectObjTemp[i].left()+m_rectObjTemp[i].width())
+				&& (before_pos.y()<m_rectObjTemp[i].top()) && (before_pos.y()>m_rectObjTemp[i].top()+m_rectObjTemp[i].height()))
 			{
 				flag_findnum = i;
 				return;
 			}
-			else	if((before_pos.x()<m_rectObj[i].left()) && (before_pos.x()>m_rectObj[i].left()+m_rectObj[i].width())
-				&& (before_pos.y()>m_rectObj[i].top()) && (before_pos.y()<m_rectObj[i].top()+m_rectObj[i].height()))
+			else	if((before_pos.x()<m_rectObjTemp[i].left()) && (before_pos.x()>m_rectObjTemp[i].left()+m_rectObjTemp[i].width())
+				&& (before_pos.y()>m_rectObjTemp[i].top()) && (before_pos.y()<m_rectObjTemp[i].top()+m_rectObjTemp[i].height()))
 			{
 				flag_findnum = i;
 				return;
 			}
-			else	if((before_pos.x()<m_rectObj[i].left()) && (before_pos.x()>m_rectObj[i].left()+m_rectObj[i].width())
-				&& (before_pos.y()<m_rectObj[i].top()) && (before_pos.y()>m_rectObj[i].top()+m_rectObj[i].height()))
+			else	if((before_pos.x()<m_rectObjTemp[i].left()) && (before_pos.x()>m_rectObjTemp[i].left()+m_rectObjTemp[i].width())
+				&& (before_pos.y()<m_rectObjTemp[i].top()) && (before_pos.y()>m_rectObjTemp[i].top()+m_rectObjTemp[i].height()))
 			{
 				flag_findnum = i;
 				return;
@@ -1685,6 +1730,9 @@ void PlayWidget::mousePressEvent(QMouseEvent *event)
 
 void PlayWidget::mouseMoveEvent(QMouseEvent *event)
 {	
+
+if(ctrl_mode != DRAW_MODE)
+	return;	
 	current_pos=event->pos();
 	int x,y;
 	if(event->buttons()==Qt::LeftButton)
@@ -1696,18 +1744,18 @@ void PlayWidget::mouseMoveEvent(QMouseEvent *event)
 			{
 				x = current_pos.x()-before_pos.x();
 				y = current_pos.y()-before_pos.y();
-				int left	 = m_rectObj[m_iObjNum-1].left();
-				int top 	=  m_rectObj[m_iObjNum-1].top();
+				int left	 = m_rectObjTemp[m_iObjNum-1].left();
+				int top 	=  m_rectObjTemp[m_iObjNum-1].top();
 				int width  =x;
 				int height =y;	
-				m_rectObj[m_iObjNum-1].setLeft(left) ;
-				m_rectObj[m_iObjNum-1].setTop(top) ;
-				m_rectObj[m_iObjNum-1].setWidth(width) ;
-				m_rectObj[m_iObjNum-1].setHeight(height) ;				
-				if(m_rectObj[m_iObjNum-1].y()<30)
-					label_rect[m_iObjNum-1]->setGeometry(m_rectObj[m_iObjNum-1].left() ,m_rectObj[m_iObjNum-1].top()+m_rectObj[m_iObjNum-1].height(),100,30 );
+				m_rectObjTemp[m_iObjNum-1].setLeft(left) ;
+				m_rectObjTemp[m_iObjNum-1].setTop(top) ;
+				m_rectObjTemp[m_iObjNum-1].setWidth(width) ;
+				m_rectObjTemp[m_iObjNum-1].setHeight(height) ;				
+				if(m_rectObjTemp[m_iObjNum-1].y()<30)
+					label_rect[m_iObjNum-1]->setGeometry(m_rectObjTemp[m_iObjNum-1].left() ,m_rectObjTemp[m_iObjNum-1].top()+m_rectObjTemp[m_iObjNum-1].height(),100,30 );
 				else
-					label_rect[m_iObjNum-1]->setGeometry(m_rectObj[m_iObjNum-1].left() ,m_rectObj[m_iObjNum-1].top()-30 ,100,30 );	
+					label_rect[m_iObjNum-1]->setGeometry(m_rectObjTemp[m_iObjNum-1].left() ,m_rectObjTemp[m_iObjNum-1].top()-30 ,100,30 );	
 				label_rect[m_iObjNum-1]->show();
 
 				
@@ -1729,23 +1777,23 @@ void PlayWidget::mouseMoveEvent(QMouseEvent *event)
 			int x,y;
 			x= current_pos.x()-before_pos.x();	
 			y= current_pos.y()-before_pos.y();
-			int left	 = m_rectObj[flag_findnum].left();
-			int top 	=  m_rectObj[flag_findnum].top();
-			int width=m_rectObj[flag_findnum].width()+x;
-			int height =m_rectObj[flag_findnum].height()+y;
+			int left	 = m_rectObjTemp[flag_findnum].left();
+			int top 	=  m_rectObjTemp[flag_findnum].top();
+			int width=m_rectObjTemp[flag_findnum].width()+x;
+			int height =m_rectObjTemp[flag_findnum].height()+y;
 			if(left+width<0)
 				width = -left;
 			if(top+height<0)
 				height = -top;
-			m_rectObj[flag_findnum].setLeft(left);
-			m_rectObj[flag_findnum].setTop(top);
-			m_rectObj[flag_findnum].setWidth(width);
-			m_rectObj[flag_findnum].setHeight(height);
+			m_rectObjTemp[flag_findnum].setLeft(left);
+			m_rectObjTemp[flag_findnum].setTop(top);
+			m_rectObjTemp[flag_findnum].setWidth(width);
+			m_rectObjTemp[flag_findnum].setHeight(height);
 			
 			if(top<30)
-				label_rect[flag_findnum]->setGeometry(m_rectObj[flag_findnum].left(),m_rectObj[flag_findnum].top()+m_rectObj[flag_findnum].height(),100,30 );
+				label_rect[flag_findnum]->setGeometry(m_rectObjTemp[flag_findnum].left(),m_rectObjTemp[flag_findnum].top()+m_rectObjTemp[flag_findnum].height(),100,30 );
 			else
-				label_rect[flag_findnum]->setGeometry(m_rectObj[flag_findnum].left(),m_rectObj[flag_findnum].top()-30,100,30 );
+				label_rect[flag_findnum]->setGeometry(m_rectObjTemp[flag_findnum].left(),m_rectObjTemp[flag_findnum].top()-30,100,30 );
 			label_rect[flag_findnum]->show();	
 			before_pos =event->pos();	
 		}				
@@ -1757,10 +1805,10 @@ void PlayWidget::mouseMoveEvent(QMouseEvent *event)
 		int x,y;
 		x= current_pos.x()-before_pos.x();	
 		y= current_pos.y()-before_pos.y();
-		int left	 = m_rectObj[flag_findnum].left();
-		int top 	=  m_rectObj[flag_findnum].top();
-		int width  =m_rectObj[flag_findnum].width();
-		int height =m_rectObj[flag_findnum].height();
+		int left	 = m_rectObjTemp[flag_findnum].left();
+		int top 	=  m_rectObjTemp[flag_findnum].top();
+		int width  =m_rectObjTemp[flag_findnum].width();
+		int height =m_rectObjTemp[flag_findnum].height();
 		
 		left = left+x;
 		top = top+y;
@@ -1774,15 +1822,15 @@ void PlayWidget::mouseMoveEvent(QMouseEvent *event)
 			top = this->height()-height;
 
 		
-		m_rectObj[flag_findnum].setLeft(left) ;
-		m_rectObj[flag_findnum].setTop(top) ;
-		m_rectObj[flag_findnum].setWidth(width) ;
-		m_rectObj[flag_findnum].setHeight(height) ;
+		m_rectObjTemp[flag_findnum].setLeft(left) ;
+		m_rectObjTemp[flag_findnum].setTop(top) ;
+		m_rectObjTemp[flag_findnum].setWidth(width) ;
+		m_rectObjTemp[flag_findnum].setHeight(height) ;
 
-		qDebug()<<"left:"<<m_rectObj[flag_findnum].left(); 
-		qDebug()<<"right:"<<m_rectObj[flag_findnum].right();
-		qDebug()<<"widht:"<<m_rectObj[flag_findnum].width();
-		qDebug()<<"height:"<<m_rectObj[flag_findnum].height();
+		qDebug()<<"left:"<<m_rectObjTemp[flag_findnum].left(); 
+		qDebug()<<"right:"<<m_rectObjTemp[flag_findnum].right();
+		qDebug()<<"widht:"<<m_rectObjTemp[flag_findnum].width();
+		qDebug()<<"height:"<<m_rectObjTemp[flag_findnum].height();
 
 
 		
@@ -1802,12 +1850,16 @@ void PlayWidget::mouseMoveEvent(QMouseEvent *event)
 void PlayWidget::mouseReleaseEvent(QMouseEvent* /*event*/)		//将画图或者是改变大小及移动的rect坐标调整为正数
 {
 	
+if(ctrl_mode != DRAW_MODE)
+	return;
 	if(flag_draw ==DRAW_RECT)
 	{//调整画图的坐标参数
-		int left   = m_rectObj[m_iObjNum-1].left();
-		int top    = m_rectObj[m_iObjNum-1].top();
-		int width  = m_rectObj[m_iObjNum-1].width();
-		int height = m_rectObj[m_iObjNum-1].height();		
+		if(m_iObjNum == 0)
+			return;
+		int left   = m_rectObjTemp[m_iObjNum-1].left();
+		int top    = m_rectObjTemp[m_iObjNum-1].top();
+		int width  = m_rectObjTemp[m_iObjNum-1].width();
+		int height = m_rectObjTemp[m_iObjNum-1].height();		
 		if(width<0)
 		{
 			left = left+width;		
@@ -1829,10 +1881,10 @@ void PlayWidget::mouseReleaseEvent(QMouseEvent* /*event*/)		//将画图或者是改变大
 			}
 			else
 			{
-				m_rectObj[m_iObjNum-1].setLeft(0) ;
-				m_rectObj[m_iObjNum-1].setTop(0) ;
-				m_rectObj[m_iObjNum-1].setWidth(0) ;
-				m_rectObj[m_iObjNum-1].setHeight(0) ;
+				m_rectObjTemp[m_iObjNum-1].setLeft(0) ;
+				m_rectObjTemp[m_iObjNum-1].setTop(0) ;
+				m_rectObjTemp[m_iObjNum-1].setWidth(0) ;
+				m_rectObjTemp[m_iObjNum-1].setHeight(0) ;
 				label_rect[m_iObjNum-1]->hide();
 				m_iObjNum--;
 				return;
@@ -1848,10 +1900,10 @@ void PlayWidget::mouseReleaseEvent(QMouseEvent* /*event*/)		//将画图或者是改变大
 			}
 			else
 			{
-					m_rectObj[m_iObjNum-1].setLeft(0) ;
-					m_rectObj[m_iObjNum-1].setTop(0) ;
-					m_rectObj[m_iObjNum-1].setWidth(0) ;
-					m_rectObj[m_iObjNum-1].setHeight(0) ;
+					m_rectObjTemp[m_iObjNum-1].setLeft(0) ;
+					m_rectObjTemp[m_iObjNum-1].setTop(0) ;
+					m_rectObjTemp[m_iObjNum-1].setWidth(0) ;
+					m_rectObjTemp[m_iObjNum-1].setHeight(0) ;
 					if(m_iObjNum>0)
 					{	
 						label_rect[m_iObjNum-1]->hide();
@@ -1861,14 +1913,14 @@ void PlayWidget::mouseReleaseEvent(QMouseEvent* /*event*/)		//将画图或者是改变大
 			}
 		}
 				
-		m_rectObj[m_iObjNum-1].setLeft(left) ;
-		m_rectObj[m_iObjNum-1].setTop(top) ;
-		m_rectObj[m_iObjNum-1].setWidth(width) ;
-		m_rectObj[m_iObjNum-1].setHeight(height) ;
-		if(m_rectObj[m_iObjNum-1].y()<30)
-			label_rect[m_iObjNum-1]->setGeometry(m_rectObj[m_iObjNum-1].left() ,m_rectObj[m_iObjNum-1].top()+m_rectObj[m_iObjNum-1].height(),100,30 );
+		m_rectObjTemp[m_iObjNum-1].setLeft(left) ;
+		m_rectObjTemp[m_iObjNum-1].setTop(top) ;
+		m_rectObjTemp[m_iObjNum-1].setWidth(width) ;
+		m_rectObjTemp[m_iObjNum-1].setHeight(height) ;
+		if(m_rectObjTemp[m_iObjNum-1].y()<30)
+			label_rect[m_iObjNum-1]->setGeometry(m_rectObjTemp[m_iObjNum-1].left() ,m_rectObjTemp[m_iObjNum-1].top()+m_rectObjTemp[m_iObjNum-1].height(),100,30 );
 		else
-			label_rect[m_iObjNum-1]->setGeometry(m_rectObj[m_iObjNum-1].left() ,m_rectObj[m_iObjNum-1].top()-30 ,100,30 );
+			label_rect[m_iObjNum-1]->setGeometry(m_rectObjTemp[m_iObjNum-1].left() ,m_rectObjTemp[m_iObjNum-1].top()-30 ,100,30 );
 
 	}
 	else if(flag_draw == DRAW_POINT)
@@ -1882,10 +1934,10 @@ void PlayWidget::mouseReleaseEvent(QMouseEvent* /*event*/)		//将画图或者是改变大
 		//调整移动和改变大小的图形坐标参数
 		if(flag_findnum ==-1)
 				return;
-		int left	 = m_rectObj[flag_findnum].left();
-		int top 	=  m_rectObj[flag_findnum].top();
-		int width=m_rectObj[flag_findnum].width();
-		int height =m_rectObj[flag_findnum].height();
+		int left	 = m_rectObjTemp[flag_findnum].left();
+		int top 	=  m_rectObjTemp[flag_findnum].top();
+		int width=m_rectObjTemp[flag_findnum].width();
+		int height =m_rectObjTemp[flag_findnum].height();
 		
 		if(width<0)
 		{
@@ -1940,29 +1992,22 @@ void PlayWidget::mouseReleaseEvent(QMouseEvent* /*event*/)		//将画图或者是改变大
 
 	/*************************聂鳌 修改时间2013-10-24*********************************************************************/
 
-		m_rectObj[flag_findnum].setLeft(left);
-		m_rectObj[flag_findnum].setTop(top);
-		m_rectObj[flag_findnum].setWidth(width);
-		m_rectObj[flag_findnum].setHeight(height);
+		m_rectObjTemp[flag_findnum].setLeft(left);
+		m_rectObjTemp[flag_findnum].setTop(top);
+		m_rectObjTemp[flag_findnum].setWidth(width);
+		m_rectObjTemp[flag_findnum].setHeight(height);
 		if(top<30)
-			label_rect[flag_findnum]->setGeometry(m_rectObj[flag_findnum].left(),m_rectObj[flag_findnum].top()+m_rectObj[flag_findnum].height(),100,30 );
+			label_rect[flag_findnum]->setGeometry(m_rectObjTemp[flag_findnum].left(),m_rectObjTemp[flag_findnum].top()+m_rectObjTemp[flag_findnum].height(),100,30 );
 		else
-			label_rect[flag_findnum]->setGeometry(m_rectObj[flag_findnum].left(),m_rectObj[flag_findnum].top()-30,100,30 );
+			label_rect[flag_findnum]->setGeometry(m_rectObjTemp[flag_findnum].left(),m_rectObjTemp[flag_findnum].top()-30,100,30 );
 	}
 	flag_height = 0;
 	flag_width = 0;
 	flag_findnum = -1;
 	flag_draw =DRAW_NO; 
-/*
-	if(m_iObjNum>0)
-	for(int i=0;i<MAX_OBJ_NUM ;i++)
-	{
-		m_rectInfo[i].x	=m_rectObj[i].left()*this->width()/pFrame->width;
-		m_rectInfo[i].y =m_rectObj[i].top()*this->height()/pFrame->height;
-		m_rectInfo[i].w =m_rectObj[i].width()*this->width()/pFrame->width;
-		m_rectInfo[i].h =m_rectObj[i].height()*this->height()/pFrame->height;
-	}
-*/	
+
+
+	
 	update();	
 }
 
@@ -2007,7 +2052,7 @@ void PlayWidget::paintEvent(QPaintEvent *)
 	for(int rectNum = 0;rectNum< MAX_OBJ_NUM;rectNum++)
 	{
 
-		painterRect.drawRect(m_rectObj[rectNum]);
+		painterRect.drawRect(m_rectObjTemp[rectNum]);
 	}
 	
 	painterRect.end();                        //释放资源因为只是一直往上画，没有释放，使电脑卡死

@@ -245,7 +245,6 @@ long LineReceive(char recvbuffer[], long lParameter)
 long CommandReceive(char recvbuffer[], long lParameter)
 {
 	CIRStream* pIRStream = (CIRStream*)lParameter;
-    printf("tttttttttttttttttttttt          \n");
 	if (pIRStream->CommandCallback)
 	{
 		pIRStream->CommandCallback((long)recvbuffer, pIRStream->parameter);
@@ -289,15 +288,12 @@ bool CIRStream::Init(int port, char* ip, CBF_IR cbf_stm, CBF_IR cbf_cmd, long pa
 {
 	if (port)
 	{
-printf(" 1111111111111 aaaaaaaaaaaaaaaaaaa\n");
-        printf("CIRStream    port:%d\n",port);
 		pIRConnect = new CIRConnect;
 		pIRConnect->Bind(port, ip, LineReceive, (long)this);
 		StreamCallback = cbf_stm;
 	}
 	if (ip)
 	{
-        printf(" 1111111111111 bbbbbbbbbbbbbbbbbbbb\n");
 		pIRCommand = new CIRConnect;
         pIRCommand->Bind(port+1, ip, CommandReceive, (long)this);
 		CommandCallback = cbf_cmd;

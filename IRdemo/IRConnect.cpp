@@ -114,7 +114,6 @@ bool CIRConnect::Bind(short port, char* ip, CBF_IRConnect cbf, long param)
 	{
         addrfrom.sin_family = AF_INET;
         addrfrom.sin_port = htons(port);
-       printf(" 333333333333333  CIRConnect socket:%d bind :%d\n ",socket,addrfrom.sin_port);
         addrfrom.sin_addr.s_addr = inet_addr(ip);
 	}
 	if (cbf)

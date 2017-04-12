@@ -15,6 +15,7 @@
 
 #define HIST_SIZE 32768
 #define MAX_OBJ_NUM 9
+#define DRAW_MODE 1
 
 typedef enum enumDrawMode
 {
@@ -137,9 +138,13 @@ public slots:
     int FramePalette(int index);
     int FrameConvert();
     int FrameRecv(Frame *pframe);
+
+	int ContrlMode(int );
 	int GrapPicture();
 	int PointTemperature();
 	int DrawRect();
+	int SaveRect();
+	int CleanRect();
 	int SetHistParam(short Param1, short Param2, short Param3, short Param4, short Param5);
 	int Histogram(UINT16 *p, UINT16 u16Max, UINT16 u16Min, UINT16 u16Width, UINT16 u16Hight, UINT16 *QuanMax, UINT16 *QuanMin, UINT16 *NrBins, UINT16 u16Param4, UINT16 u16Param5);
 	void mousePressEvent(QMouseEvent *event);
@@ -162,6 +167,7 @@ private:
 	QPen pen;
 	QLabel lb_point;
 	QLabel *label_rect[MAX_OBJ_NUM];
+	QRect  m_rectObjTemp[MAX_OBJ_NUM];
 	QRect  m_rectObj[MAX_OBJ_NUM];
 	QPoint before_pos; 		     //记录鼠标初始位置
 	QPoint current_pos; 		  //记录鼠标当前位置
@@ -171,7 +177,7 @@ private:
 	int  m_iObjNum;	//用来记录图形框的数量，以判断图形数量是否达到最大值
 	int flag_width;		//记录图形改变前的宽度
 	int flag_height;		//记录图形改变前的高度
-
+	int ctrl_mode;
 };
 
 #endif
