@@ -159,9 +159,10 @@ public:
 
 	QTimer timerTTTTT;
 	QLabel lb_point;
-
+    QLabel lb_obj[MAX_OBJ_NUM];
 	Frame pTmptttt;
     int iFps;
+        int bRectTemp;
 	TemperatureThread tempThread;
     friend long FrameCallBack(long lData, long lParam);
 
@@ -215,7 +216,7 @@ private:
 	int flag_width;		//记录图形改变前的宽度
 	int flag_height;		//记录图形改变前的高度
 	int ctrl_mode;
-    int bRectTemp;
+
 };
 
 #endif

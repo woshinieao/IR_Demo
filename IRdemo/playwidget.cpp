@@ -975,13 +975,6 @@ long  FrameCallBack(long lData, long lParam)
        	pIRPlayer-> FrameRecv((Frame *)lData);
         pIRPlayer->mutex_bmp.unlock();
 	}
-	else
-    {
-        pIRPlayer->pFrame = NULL;
-        qDebug()<<" aaaaa   11111111111111111111111111111111111111111";
-       // delete (Frame *)lData;
-    }
-
 	return 0;
 
 }
@@ -993,7 +986,7 @@ TemperatureThread::TemperatureThread(void * /*arg*/)
 	for(int it=0;it<MAX_OBJ_NUM;it++)
     {
         m_rectInfo[it].max = 0;
-        m_rectInfo[it].min = 0;
+        m_rectInfo[it].min = 0xffffff;
         m_rectInfo[it].x = 0;
         m_rectInfo[it].y = 0;
         m_rectInfo[it].w = 0;
@@ -1004,45 +997,45 @@ TemperatureThread::TemperatureThread(void * /*arg*/)
 
 void TemperatureThread::run()
 {
-
 	while(true)
 	{
 		mutex.lock(); 
 		cond.wait(&mutex);
-
-
-
-			/*
-
-				 if(mode == DRAW_RECT)
-					for(int it=0;it<MAX_OBJ_NUM;it++)
-					{
-							if(m_rectInfo[it].x>i && i<(m_rectInfo[it].x+m_rectInfo[it].w) && j>m_rectInfo[it].y && j<(m_rectInfo[it].y+m_rectInfo[it].h))
-							{
-								if(m_rectInfo[it].max<thdFrame.buffer[i + thdFrame.width * j])
-										m_rectInfo[it].max =thdFrame.buffer[i + thdFrame.width * j];
-								else if(m_rectInfo[it].min>thdFrame.buffer[i + thdFrame.width * j])
-										m_rectInfo[it].min =thdFrame.buffer[i + thdFrame.width * j];
-								qDebug()<<"m_rectInfo[it].x:"<<m_rectInfo[it].x;
-								 qDebug()<<"m_rectInfo[it].y:"<<m_rectInfo[it].y;
-								  qDebug()<<"m_rectInfo[it].w:"<<m_rectInfo[it].w;
-								   qDebug()<<"m_rectInfo[it].h:"<<m_rectInfo[it].h;
-								qDebug()<<"m_rectInfo[it].max:"<<m_rectInfo[it].max;
-								 qDebug()<<"m_rectInfo[it].min:"<<m_rectInfo[it].min;
-
-							}
-					}
-		*/			
+        for(int it=0;it<MAX_OBJ_NUM;it++)
+        {
+            for (int j = m_rectInfo[it].y; j < m_rectInfo[it].y+m_rectInfo[it].h; j++)
+            {
+                for (int i = m_rectInfo[it].x; i < m_rectInfo[it].x+m_rectInfo[it].w; i++)
+                {
+                    if(m_rectInfo[it].max<thdFrame.buffer[i + thdFrame.width * j])
+                            m_rectInfo[it].max =thdFrame.buffer[i + thdFrame.width * j];
+                    else if(m_rectInfo[it].min>thdFrame.buffer[i + thdFrame.width * j])
+                            m_rectInfo[it].min =thdFrame.buffer[i + thdFrame.width * j];
+                }
+            }
+        }
 		mutex.unlock();  
+        for(int it=0;it<MAX_OBJ_NUM;it++)
+        {
+        qDebug()<<"it:"<<it;
+        qDebug()<<"m_rectInfo[it].x:"<<m_rectInfo[it].x;
+         qDebug()<<"m_rectInfo[it].y:"<<m_rectInfo[it].y;
+          qDebug()<<"m_rectInfo[it].w:"<<m_rectInfo[it].w;
+           qDebug()<<"m_rectInfo[it].h:"<<m_rectInfo[it].h;
+  qDebug()<<"m_rectInfo[it].max:"<<m_rectInfo[it].max;
+   qDebug()<<"m_rectInfo[it].min:"<<m_rectInfo[it].min;
+        }
 	}
 }
 
 void TemperatureThread::WakeUp(Frame *pTmp,eDrawMode emode)
 {
+
+        PlayWidget *parent = (PlayWidget *)this->parent();
 	if(emode == DRAW_POINT)
 	{
 		QPoint position;
-		PlayWidget *parent = (PlayWidget *)this->parent();
+
 		float xp,yp;
 		float xi,xj;	
 
@@ -1054,6 +1047,7 @@ void TemperatureThread::WakeUp(Frame *pTmp,eDrawMode emode)
 		int i = (int)parent->lb_point.x()*xp;
 		int j = (int)parent->lb_point.y()*yp ;
 		parent->lb_point.setText(QString::number(pTmp->buffer[i + thdFrame.width * j]));	
+        /*
 		qDebug()<<"width: "<<pTmp->width;
 		qDebug()<<"height: "<<pTmp->height;
 		qDebug()<<"parent->width() :"<<parent->width();
@@ -1067,11 +1061,12 @@ void TemperatureThread::WakeUp(Frame *pTmp,eDrawMode emode)
 		printf("parent->lb_point.y() : %f\n",(float)position.y()*yp);
 		qDebug()<<"i: "<<i;
 		qDebug()<<"j: "<<j;
+        */
 		return ;
 	}
-	else if(emode == DRAW_RECT)
+    else if( parent->bRectTemp == 1)
 	{
-		mode = emode;
+        mode = emode;
 		memcpy(&thdFrame,pTmp,sizeof(Frame));
 		cond.wakeOne(); 
 	}
@@ -1130,6 +1125,13 @@ PlayWidget::PlayWidget(QWidget *parent)
     lbFrameNum->hide();
 
 
+
+
+
+
+
+
+
    tempThread.setParent(this); 
     FrameHeader();
     FramePalette(0);
@@ -1138,7 +1140,7 @@ PlayWidget::PlayWidget(QWidget *parent)
 
 
 
-
+/*
 	pTmptttt.height = 480;
 	
 	pTmptttt.width = 640;
@@ -1151,8 +1153,9 @@ PlayWidget::PlayWidget(QWidget *parent)
 	fclose(fd);
 
 	timerTTTTT.start(20);
+
 		tempThread.start();
-	
+     */
 }
 
 
@@ -1633,6 +1636,7 @@ int PlayWidget::FrameConvert()
 
 void PlayWidget::TimeSecond()
 {
+
     lbFrameNum->setText(QString::number(iFps)+" FPS");
     iFps = 0;
 }
@@ -1656,13 +1660,10 @@ int PlayWidget::FrameRecv(Frame* pTmp)
 	if(pTmp == NULL)
 		return -1;
 	memcpy(pFrame,pTmp,sizeof(Frame));
-	if( iFps%5 == 0 && flag_draw == DRAW_RECT || flag_draw == DRAW_POINT)
+    if( iFps%5 == 0 &&( bRectTemp == 1 || flag_draw == DRAW_POINT))
 	{
-		tempThread.WakeUp(pTmp,flag_draw);
+        tempThread.WakeUp(pTmp,flag_draw);
 	}
-	
-	delete pTmp;
-	
 	USHORT m = 0, n = 16383;
 	for (int j = 0; j < pFrame->height; j++)
 	{
@@ -1742,13 +1743,15 @@ int PlayWidget::Play()
     lbFrameNum->setGeometry(10,5,50,30 );
     lbFrameNum->show();
     timer.start(1000);
-	tempThread.start();
+    tempThread.start();
 	return 0;
 
 }
 
 int PlayWidget::Stop()
 {
+
+
 	IR_Command(0, COMMAND_STOP);
     //m_play = false;
 	return 0;
@@ -1774,13 +1777,36 @@ int PlayWidget::SaveRect()
 {
     bRectTemp = 1;
 	flag_draw = DRAW_NO;
-	for(int i=0;i<MAX_OBJ_NUM ;i++)
+
+    float xp,yp;
+    float xi,xj;
+    xi = (float)(this->width());
+    xj = (float)(this->height());
+    xp = (((float)pFrame->width)/xi);
+    yp = (((float)pFrame->height)/xj);
+
+    for(int i=0;i<m_iObjNum ;i++)
 	{
-	
-        tempThread.m_rectInfo[i].x	=m_rectObjTemp[i].x()*pFrame->width/this->width();
-        tempThread.m_rectInfo[i].y =m_rectObjTemp[i].y()*pFrame->height/this->height();
-        tempThread.m_rectInfo[i].w =m_rectObjTemp[i].width()*pFrame->width/this->width();
-        tempThread.m_rectInfo[i].h =m_rectObjTemp[i].height()*pFrame->height/this->height();
+
+
+
+            //     lb_obj[i].setParent(this);
+                  lb_obj[i].show();
+                 lb_obj[i].setGeometry(50+100*(i%3),this->width()-(3-i/3)*20,100,20 );
+                 lb_obj[i].setText("aaaaaaaaaaaaa");
+
+        tempThread.m_rectInfo[i].x	=m_rectObjTemp[i].x()*xp;
+        tempThread.m_rectInfo[i].y =m_rectObjTemp[i].y()*yp;
+        tempThread.m_rectInfo[i].w =m_rectObjTemp[i].width()*xp;
+        tempThread.m_rectInfo[i].h =m_rectObjTemp[i].height()*yp;
+
+        qDebug()<<"it:"<<i;
+        qDebug()<<"m_rectInfo[it].x:"<<tempThread.m_rectInfo[i].x;
+         qDebug()<<"m_rectInfo[it].y:"<<tempThread.m_rectInfo[i].y;
+          qDebug()<<"m_rectInfo[it].w:"<<tempThread.m_rectInfo[i].w;
+           qDebug()<<"m_rectInfo[it].h:"<<tempThread.m_rectInfo[i].h;
+        qDebug()<<"m_rectInfo[it].max:"<<tempThread.m_rectInfo[i].max;
+         qDebug()<<"m_rectInfo[it].min:"<<tempThread.m_rectInfo[i].min;
 	}
 
 
@@ -1908,7 +1934,7 @@ if(ctrl_mode != DRAW_MODE)
 		if(flag_draw == DRAW_RECT)
 		{
 
-            qDebug()<<"m_iObjNum:"<<m_iObjNum;
+         //   qDebug()<<"m_iObjNum:"<<m_iObjNum;
 
 			if(current_pos.x()>0 && current_pos.x()<this->width()
 				&& current_pos.y()>0 && current_pos.y()<this->height())
@@ -2098,8 +2124,9 @@ if(ctrl_mode != DRAW_MODE)
 	}
 	else if(flag_draw == DRAW_POINT)
 	{
+        lb_point.setText(" ");
 		lb_point.hide();
-		lb_point.setText(" ");
+        update();
 
 	}
 	else 
@@ -2209,14 +2236,14 @@ void PlayWidget::paintEvent(QPaintEvent *)
 	 	painterImage.end();
 	}
 
-
+/*
 	QPainter painterImage(this);
 			QRect rect_image(0,0,this->width(),this->height());
 			QImage pixImg;
 
 	pixImg.load("bmp/2.bmp");
 	painterImage.drawImage(rect_image,pixImg);
-
+*/
 
 	
 	QPainter painterRect(this);
