@@ -111,6 +111,33 @@ typedef struct tagRectInfo
 
 typedef long (*CBF_IR)(long lData, long lParam);
 
+//class PlayWidget ;
+
+class TemperatureThread:public QThread
+{
+	 Q_OBJECT
+public:
+	 TemperatureThread(void *arg=0);
+	 ~TemperatureThread();
+	 void WakeUp(Frame *pTmp,eDrawMode emode);
+	void run();
+
+	Frame thdFrame;
+	tRectInfo  m_rectInfo[MAX_OBJ_NUM];
+
+	
+public slots:
+
+private:
+	QWaitCondition cond;  
+    QMutex mutex; 
+	eDrawMode mode;
+
+};
+
+
+
+
 class PlayWidget : public QWidget
 {
 	Q_OBJECT
@@ -129,7 +156,13 @@ public:
 	
 	QString m_file;
     QTimer timer;
-    int iframnum;
+
+	QTimer timerTTTTT;
+	QLabel lb_point;
+
+	Frame pTmptttt;
+    int iFps;
+	TemperatureThread tempThread;
     friend long FrameCallBack(long lData, long lParam);
 
 public slots:
@@ -140,7 +173,8 @@ public slots:
     int FrameConvert();
     int FrameRecv(Frame *pframe);
 
-       void TimeSecond();
+	void TimeSecond();
+	void TimeSecondTTTTT();
 	int ContrlMode(int );
 	int GrapPicture();
 	int PointTemperature();
@@ -167,21 +201,21 @@ private:
 	UINT8	u8SensorType;
 
 	QPen pen;
-	QLabel lb_point;
+
 	QLabel *label_rect[MAX_OBJ_NUM];
     QLabel *lbFrameNum;
 	QRect  m_rectObjTemp[MAX_OBJ_NUM];
 	QRect  m_rectObj[MAX_OBJ_NUM];
 	QPoint before_pos; 		     //记录鼠标初始位置
 	QPoint current_pos; 		  //记录鼠标当前位置
-	tRectInfo  m_rectInfo[MAX_OBJ_NUM];
+
 	eDrawMode flag_draw;//用来标记什么时候开始画矩形
 	int flag_findnum;//用来标记移动、改变大小的矩形
 	int  m_iObjNum;	//用来记录图形框的数量，以判断图形数量是否达到最大值
 	int flag_width;		//记录图形改变前的宽度
 	int flag_height;		//记录图形改变前的高度
 	int ctrl_mode;
-    int ttt;
+    int bRectTemp;
 };
 
 #endif

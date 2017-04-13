@@ -60,7 +60,7 @@ int IrMainWindow::Disconnect()
 
 int IrMainWindow::Calibrate()
 {
-qDebug()<<"aaaaaaaaaaa tttttttttttttttt";
+qDebug()<<"aaaaaaaaaaa bRectTempbRectTempbRectTempbRectTempbRectTempt";
    return  IR_Command(0,COMMAND_CALIBRATE);
 
 }
