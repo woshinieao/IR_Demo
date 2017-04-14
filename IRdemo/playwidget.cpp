@@ -986,7 +986,7 @@ TemperatureThread::TemperatureThread(void * /*arg*/)
 	for(int it=0;it<MAX_OBJ_NUM;it++)
     {
         m_rectInfo[it].max = 0;
-        m_rectInfo[it].min = 0xffffff;
+        m_rectInfo[it].min = 16383;
         m_rectInfo[it].x = 0;
         m_rectInfo[it].y = 0;
         m_rectInfo[it].w = 0;
@@ -997,11 +997,13 @@ TemperatureThread::TemperatureThread(void * /*arg*/)
 
 void TemperatureThread::run()
 {
+	PlayWidget *parent = (PlayWidget *)this->parent();
+
 	while(true)
 	{
 		mutex.lock(); 
 		cond.wait(&mutex);
-        for(int it=0;it<MAX_OBJ_NUM;it++)
+        for(int it=0;it<parent->m_iObjNum;it++)
         {
             for (int j = m_rectInfo[it].y; j < m_rectInfo[it].y+m_rectInfo[it].h; j++)
             {
@@ -1013,17 +1015,18 @@ void TemperatureThread::run()
                             m_rectInfo[it].min =thdFrame.buffer[i + thdFrame.width * j];
                 }
             }
+			parent->lb_obj[it].setText("max:"+QString::number(m_rectInfo[it].max)+"  "+"avg:"+QString::number((m_rectInfo[it].max+m_rectInfo[it].min)/2)+"  "+"min:"+QString::number( m_rectInfo[it].min));
         }
 		mutex.unlock();  
         for(int it=0;it<MAX_OBJ_NUM;it++)
         {
-        qDebug()<<"it:"<<it;
-        qDebug()<<"m_rectInfo[it].x:"<<m_rectInfo[it].x;
-         qDebug()<<"m_rectInfo[it].y:"<<m_rectInfo[it].y;
-          qDebug()<<"m_rectInfo[it].w:"<<m_rectInfo[it].w;
-           qDebug()<<"m_rectInfo[it].h:"<<m_rectInfo[it].h;
-  qDebug()<<"m_rectInfo[it].max:"<<m_rectInfo[it].max;
-   qDebug()<<"m_rectInfo[it].min:"<<m_rectInfo[it].min;
+qDebug()<<"it:"<<it;
+qDebug()<<"m_rectInfo[it].x:"<<m_rectInfo[it].x;
+qDebug()<<"m_rectInfo[it].y:"<<m_rectInfo[it].y;
+qDebug()<<"m_rectInfo[it].w:"<<m_rectInfo[it].w;
+qDebug()<<"m_rectInfo[it].h:"<<m_rectInfo[it].h;
+qDebug()<<"m_rectInfo[it].max:"<<m_rectInfo[it].max;
+qDebug()<<"m_rectInfo[it].min:"<<m_rectInfo[it].min;
         }
 	}
 }
@@ -1080,18 +1083,6 @@ TemperatureThread::~TemperatureThread()
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 PlayWidget::PlayWidget(QWidget *parent)
     : QWidget(parent)
 {
@@ -1104,6 +1095,8 @@ PlayWidget::PlayWidget(QWidget *parent)
     bRectTemp = 0;
     iFps = 0;
 	m_iObjNum = 0;
+
+	
 	pen.setWidth(3);
 	pen.setColor(Qt::red);
     pFrame = new Frame;
@@ -1115,6 +1108,8 @@ PlayWidget::PlayWidget(QWidget *parent)
 		label_rect[num] = new  QLabel(R,this,0);
 		label_rect[num]->setAttribute(Qt::WA_TranslucentBackground);
 		label_rect[num]->hide();
+		lb_obj[num].setParent(this);
+		lb_obj[num].hide();
 	}
 	lb_point.setParent(this);
 	lb_point.setAttribute(Qt::WA_TranslucentBackground);
@@ -1124,41 +1119,21 @@ PlayWidget::PlayWidget(QWidget *parent)
     lbFrameNum->setAttribute(Qt::WA_TranslucentBackground);
     lbFrameNum->hide();
 
-
-
-
-
-
-
-
-
-   tempThread.setParent(this); 
+   	tempThread.setParent(this); 
     FrameHeader();
     FramePalette(0);
-
-
-
-
-
 /*
 	pTmptttt.height = 480;
-	
 	pTmptttt.width = 640;
-
-
 	FILE *fd = fopen("bmp/1.bmp","r");
-
 	fread((char *)&m_FileInfoheader,1,sizeof(m_FileInfoheader),fd);
 	memcpy(pTmptttt.buffer,m_FileInfoheader.buffer,MAX_COUNT);
 	fclose(fd);
-
-	timerTTTTT.start(20);
-
-		tempThread.start();
-     */
+	tempThread.start();
+	timerTTTTT.start(3000);
+*/
+     	
 }
-
-
 
 int PlayWidget::FrameHeader()
 {
@@ -1647,6 +1622,18 @@ void PlayWidget::TimeSecond()
 void PlayWidget::TimeSecondTTTTT()
 {
 
+    for(int i=0;i<MAX_OBJ_NUM;i++)
+    	{
+    	lb_obj[i].setParent(this);
+	lb_obj[i].show();
+		
+			qDebug()<<"width:"<<this->height();
+
+			qDebug()<<"aa lb_obj:"<<this->height()-((3-i/3)*20);
+	lb_obj[i].setGeometry(100+210*(i%3),this->height()-(3-i/3)*32,200,30 );
+	lb_obj[i].setText("max:"+QString::number(i*110)+"  "+"avg:"+QString::number(i*110)+"  "+"min:"+QString::number(i*110));
+		lb_obj[i].setStyleSheet("background-color: rgb(85, 170, 255)");
+    	}
 //	FrameRecv(&pTmptttt);
 //	update();
 
@@ -1769,6 +1756,8 @@ int PlayWidget::ContrlMode(int index)
 
 int PlayWidget::DrawRect()
 {
+	if(m_iObjNum>9)
+		return 0;
 	flag_draw = DRAW_RECT;
 	return 0;
 }
@@ -1788,30 +1777,21 @@ int PlayWidget::SaveRect()
     for(int i=0;i<m_iObjNum ;i++)
 	{
 
+		lb_obj[i].show();
+		lb_obj[i].setGeometry(50+100*(i%3),this->height()-(3-i/3)*20,100,20 );
+		tempThread.m_rectInfo[i].x	=m_rectObjTemp[i].x()*xp;
+		tempThread.m_rectInfo[i].y =m_rectObjTemp[i].y()*yp;
+		tempThread.m_rectInfo[i].w =m_rectObjTemp[i].width()*xp;
+		tempThread.m_rectInfo[i].h =m_rectObjTemp[i].height()*yp;
 
-
-            //     lb_obj[i].setParent(this);
-                  lb_obj[i].show();
-                 lb_obj[i].setGeometry(50+100*(i%3),this->width()-(3-i/3)*20,100,20 );
-                 lb_obj[i].setText("aaaaaaaaaaaaa");
-
-        tempThread.m_rectInfo[i].x	=m_rectObjTemp[i].x()*xp;
-        tempThread.m_rectInfo[i].y =m_rectObjTemp[i].y()*yp;
-        tempThread.m_rectInfo[i].w =m_rectObjTemp[i].width()*xp;
-        tempThread.m_rectInfo[i].h =m_rectObjTemp[i].height()*yp;
-
-        qDebug()<<"it:"<<i;
-        qDebug()<<"m_rectInfo[it].x:"<<tempThread.m_rectInfo[i].x;
-         qDebug()<<"m_rectInfo[it].y:"<<tempThread.m_rectInfo[i].y;
-          qDebug()<<"m_rectInfo[it].w:"<<tempThread.m_rectInfo[i].w;
-           qDebug()<<"m_rectInfo[it].h:"<<tempThread.m_rectInfo[i].h;
-        qDebug()<<"m_rectInfo[it].max:"<<tempThread.m_rectInfo[i].max;
-         qDebug()<<"m_rectInfo[it].min:"<<tempThread.m_rectInfo[i].min;
+		qDebug()<<"it:"<<i;
+		qDebug()<<"m_rectInfo[it].x:"<<tempThread.m_rectInfo[i].x;
+		qDebug()<<"m_rectInfo[it].y:"<<tempThread.m_rectInfo[i].y;
+		qDebug()<<"m_rectInfo[it].w:"<<tempThread.m_rectInfo[i].w;
+		qDebug()<<"m_rectInfo[it].h:"<<tempThread.m_rectInfo[i].h;
+		qDebug()<<"m_rectInfo[it].max:"<<tempThread.m_rectInfo[i].max;
+		qDebug()<<"m_rectInfo[it].min:"<<tempThread.m_rectInfo[i].min;
 	}
-
-
-
-
 	return 0;
 }
 

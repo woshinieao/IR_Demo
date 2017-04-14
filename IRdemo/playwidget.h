@@ -162,7 +162,8 @@ public:
     QLabel lb_obj[MAX_OBJ_NUM];
 	Frame pTmptttt;
     int iFps;
-        int bRectTemp;
+    int bRectTemp;
+	int  m_iObjNum; 
 	TemperatureThread tempThread;
     friend long FrameCallBack(long lData, long lParam);
 
@@ -212,7 +213,6 @@ private:
 
 	eDrawMode flag_draw;//用来标记什么时候开始画矩形
 	int flag_findnum;//用来标记移动、改变大小的矩形
-	int  m_iObjNum;	//用来记录图形框的数量，以判断图形数量是否达到最大值
 	int flag_width;		//记录图形改变前的宽度
 	int flag_height;		//记录图形改变前的高度
 	int ctrl_mode;

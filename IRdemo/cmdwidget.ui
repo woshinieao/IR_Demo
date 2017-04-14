@@ -604,7 +604,7 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QPushButton" name="pushButton_18">
+           <widget class="QPushButton" name="btnClrBpList">
             <property name="minimumSize">
              <size>
               <width>100</width>

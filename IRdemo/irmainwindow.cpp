@@ -69,7 +69,7 @@ qDebug()<<"aaaaaaaaaaa bRectTempbRectTempbRectTempbRectTempbRectTempt";
 
 int IrMainWindow::DevSet()
 {
-
+	cmdWidget.show();
 	return 0;
 
 }

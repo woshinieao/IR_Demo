@@ -6,6 +6,7 @@
 
 #include "ui_irmainwindow.h"
 #include "IRCore.h"
+#include "cmdwidget.h"
 
 
 class IrMainWindow : public QMainWindow,public Ui_IrMainWindow
@@ -29,6 +30,7 @@ public slots:
 private:
 
 	QString ir_ip;
+	CmdWidget cmdWidget;
    
 
 };
