@@ -12,9 +12,7 @@ CmdWidget::CmdWidget(QWidget *parent):QWidget(parent)
 
 void CmdWidget::Command()
 {
-	cmdWidget
-
-
+	
 }
 
 CmdWidget::~CmdWidget()
