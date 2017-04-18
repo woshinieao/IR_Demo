@@ -46,7 +46,7 @@ typedef  void * HANDLE;
 
 typedef unsigned long DWORD;
 typedef int BOOL;
-typedef unsigned char BYTE;
+typedef  char BYTE;
 typedef unsigned short WORD;
 
 

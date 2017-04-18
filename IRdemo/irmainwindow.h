@@ -26,11 +26,15 @@ public slots:
 	int Connect();
     int Disconnect();
     int Calibrate();
+	int Record();
 	int DevSet();
+signals:
+	void sigRecord(bool);
 private:
 
 	QString ir_ip;
 	CmdWidget cmdWidget;
+
    
 
 };

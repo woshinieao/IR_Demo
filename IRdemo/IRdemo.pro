@@ -14,7 +14,8 @@ HEADERS += cmdwidget.h \
            IRPalette.h \
            IRStream.h \
            playwidget.h \
-           resource.h
+           resource.h \
+	   avilib.h
 FORMS += cmdwidget.ui irmainwindow.ui
 SOURCES += cmdwidget.cpp \
            IRConnect.cpp \
@@ -22,4 +23,5 @@ SOURCES += cmdwidget.cpp \
            irmainwindow.cpp \
            IRStream.cpp \
            main.cpp \
-           playwidget.cpp
+           playwidget.cpp \
+	   avilib.cpp

@@ -12,6 +12,7 @@
 #include <string.h>
 #include "IRCore.h"
 #include "IRPalette.h"
+#include "avilib.h"
 
 #define HIST_SIZE 32768
 #define MAX_OBJ_NUM 9
@@ -64,6 +65,15 @@ typedef struct tagBITMAPINFO {
     BITMAPINFOHEADER bmiHeader; //指定了一个BITMAPINFOHEADER结构，包含了有关设备相关位图的度量和颜色格式的信息
     RGBQUAD          bmiColors[256]; //指定了一个RGBQUAD或DWORD数据类型的数组，定义了位图中的颜色。
 } BITMAPINFO; 
+
+
+
+typedef struct tagBMPFLIEHEADER {	
+	BITMAPFILEHEADER fileheader;
+	BITMAPINFO       info;
+}BMPFLIEHEADER;
+
+
 
 typedef struct tagBMPFILE {	
 	BITMAPFILEHEADER fileheader;
@@ -135,6 +145,19 @@ private:
 
 };
 
+class RecordThread:public QThread
+{
+	 Q_OBJECT
+public:
+	 RecordThread(){m_start = false;};
+	 ~RecordThread(){}; 
+	 void run();
+	Frame videoFrame;
+	BMPFLIE framefile;
+	CovertFrame m_frame;
+	bool m_start;
+
+};
 
 
 
@@ -149,10 +172,11 @@ public:
     CBF_IR pCBFframe;
 	BMPFLIE m_Bmpfile;
     CovertFrame m_Covertframe;
-    BMPFLIE m_FileInfoheader;
+    BMPFLIEHEADER m_FileInfoheader;
     Frame *pFrame;
 	bool m_play;
 	bool m_grap;
+	bool m_record;
 	
 	QString m_file;
     QTimer timer;
@@ -165,6 +189,7 @@ public:
     int bRectTemp;
 	int  m_iObjNum; 
 	TemperatureThread tempThread;
+	RecordThread videoThread;
     friend long FrameCallBack(long lData, long lParam);
 
 public slots:
@@ -179,6 +204,7 @@ public slots:
 	void TimeSecondTTTTT();
 	int ContrlMode(int );
 	int GrapPicture();
+	int RecordIng(bool);
 	int PointTemperature();
 	int DrawRect();
 	int SaveRect();

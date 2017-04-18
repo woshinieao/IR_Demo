@@ -648,7 +648,7 @@ u_int8_t palette[] = {
 };
 */
 
-BYTE paletteList[] = {
+unsigned char paletteList[] = {
 	0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x02, 0x02, 0x02, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x04, 0x04, 0x04, 0x05, 0x05, 0x05, 0x06, 
 	0x06, 0x06, 0x08, 0x08, 0x08, 0x09, 0x09, 0x09, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0B, 0x0B, 0x0B, 0x0C, 0x0C, 0x0C, 0x0D, 0x0D, 0x0D, 0x0F, 0x0F,
 	0x0F, 0x10, 0x10, 0x10, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x12, 0x12, 0x12, 0x13, 0x13, 0x13, 0x14, 0x14, 0x14, 0x16, 0x16, 0x16, 0x17, 0x17, 0x17,
@@ -962,13 +962,14 @@ BYTE paletteList[] = {
 
 
 
-
 long  FrameCallBack(long lData, long lParam)
 {
 
     PlayWidget* pIRPlayer = (PlayWidget*)lParam;
     if( pIRPlayer->m_play == false)
         return 0;
+	if(pIRPlayer->m_record)
+		memcpy((void *)&pIRPlayer->videoThread.videoFrame,(void *)lData,sizeof(Frame));
     if(pIRPlayer->mutex_bmp.tryLock())
 	{
         pIRPlayer->pFrame =(Frame *)lData;
@@ -978,8 +979,6 @@ long  FrameCallBack(long lData, long lParam)
 	return 0;
 
 }
-
-
 
 TemperatureThread::TemperatureThread(void * /*arg*/)
 {
@@ -1083,6 +1082,96 @@ TemperatureThread::~TemperatureThread()
 }
 
 
+void RecordThread::run()
+{
+	int i=0;
+	avi_t *out_fd = NULL; 
+   	QString video_file = QDate::currentDate().toString("yyyy.MM.dd")+"-"+ QTime::currentTime().toString("hh.mm.ss")+".avi";
+	QByteArray cpath = video_file.toLocal8Bit();
+	
+	char*p = cpath.data();
+	out_fd = AVI_open_output_file(p);
+	if(out_fd!=NULL)
+	{
+		AVI_set_video(out_fd, 640, 480, 50, "MJPG");
+	}
+
+
+
+
+
+	
+	while(m_start)
+	{
+	
+
+		
+	
+		USHORT p[MAX_COUNT];
+		int  max = HIST_SIZE - 1, min = 0;
+		memcpy(p, videoFrame.buffer, sizeof(videoFrame.buffer) );
+		int hist[HIST_SIZE];
+		long sum = 0;
+		memset(hist, 0, sizeof(int) * HIST_SIZE);
+		for (int i = 0; i < videoFrame.width * videoFrame.height; i++)
+		{
+			hist[p[i]]++;
+		}
+		for (int i = 0; i < HIST_SIZE; i++)
+		{
+			sum += hist[i];
+			if (sum <= videoFrame.width * videoFrame.height * 0.01)
+				min = i;
+			if (sum <= videoFrame.width * videoFrame.height * 0.99)
+				max = i;
+			else
+				break;
+		}
+		if (hist[min] > 32) hist[min] = 32;
+		else if (hist[min] < 1) hist[min] = 1;
+		for (int i = min + 1; i <= max; i++)
+		{
+			if (hist[i] > 32) hist[i] = hist[i-1] + 32;
+			else if (hist[i] <	1) hist[i] = hist[i-1] + 1;
+			else hist[i] += hist[i-1];
+		}
+		BYTE v = 232;
+		if (max - min < 232) v = max - min;
+		if (max - min < 128) v = 128;
+	
+		BYTE table[HIST_SIZE];
+		for (int i = min; i <= max; i++)
+		{
+			table[i] = (BYTE)(hist[i] * v / hist[max]);
+		}
+		for (int i = 0; i < videoFrame.width * videoFrame.height; i++)
+		{
+			if (p[i] > max)
+				m_frame.buffer[i] = table[max] - v / 2 + 128;
+			else if (p[i] < min)
+				m_frame.buffer[i] = table[min] - v / 2 + 128;
+			else
+				m_frame.buffer[i] = table[p[i]] - v / 2 + 128;
+		}
+
+	i++;
+		qDebug()<<" recording :"<<i;
+
+	memset(m_frame.buffer,i,MAX_COUNT);
+    memcpy((void *)framefile.buffer,(void *)m_frame.buffer,MAX_COUNT);
+	
+	AVI_write_frame(out_fd, (char *)framefile.info.bmiColors,MAX_COUNT+sizeof(RGBQUAD),0);
+	if(i>50)
+		break;
+	}
+	AVI_close(out_fd);
+
+}
+
+
+
+
+
 PlayWidget::PlayWidget(QWidget *parent)
     : QWidget(parent)
 {
@@ -1095,6 +1184,7 @@ PlayWidget::PlayWidget(QWidget *parent)
     bRectTemp = 0;
     iFps = 0;
 	m_iObjNum = 0;
+	m_record = false;
 
 	
 	pen.setWidth(3);
@@ -1643,7 +1733,7 @@ void PlayWidget::TimeSecondTTTTT()
 int PlayWidget::FrameRecv(Frame* pTmp)
 {
 
-    iFps++;
+
 	if(pTmp == NULL)
 		return -1;
 	memcpy(pFrame,pTmp,sizeof(Frame));
@@ -1705,7 +1795,7 @@ int PlayWidget::FrameRecv(Frame* pTmp)
 	
  */
     FrameConvert();
-    memcpy((void *)&m_Bmpfile,(char *)(&m_FileInfoheader)+2,sizeof(BITMAPINFO)-2);
+    memcpy((void *)&m_Bmpfile,(char *)(&m_FileInfoheader)+2,sizeof(BMPFLIEHEADER)-2);
     memcpy((void *)m_Bmpfile.buffer,(void *)m_Covertframe.buffer,MAX_COUNT);
 
     update();
@@ -1716,10 +1806,20 @@ int PlayWidget::FrameRecv(Frame* pTmp)
 
 int PlayWidget::GrapPicture()
 {
-    m_file = QDate::currentDate().toString("yyyy.MM.dd")+"-"+ QTime::currentTime().toString("hh.mm.ss")+".bmp";
+    m_file = QDate::currentDate().toString("yyyy.MM.dd")+"-"+ QTime::currentTime().toString("hh.mm.ss")+".jpg";
 	m_grap = true;
 	qDebug()<<m_file;
 	return 0;
+}
+
+
+int PlayWidget::RecordIng(bool starting)
+{
+	videoThread.m_start= m_record =starting;
+	memcpy((void *)&videoThread.framefile,(char *)&m_FileInfoheader+2,sizeof(BMPFLIE));
+	if(starting)
+		videoThread.start();
+		
 }
 
 
@@ -2196,6 +2296,7 @@ void PlayWidget::paintEvent(QPaintEvent *)
 {
     if(m_play == true)
 	{
+		iFps++;
 		QPainter painterImage(this);
 		QRect rect_image(0,0,this->width(),this->height());
 		QImage pixImg;
@@ -2207,7 +2308,7 @@ void PlayWidget::paintEvent(QPaintEvent *)
 			pixImg.save(m_file);
 			m_grap = false;
 		}
-
+		
 		painterImage.setPen(pen);
 	    painterImage.drawLine(m_Covertframe.iParam[PARAM_MAX_X]-5,m_Covertframe.iParam[PARAM_MAX_Y],m_Covertframe.iParam[PARAM_MAX_X]+5,m_Covertframe.iParam[PARAM_MAX_Y]);
 	    painterImage.drawLine(m_Covertframe.iParam[PARAM_MAX_X],m_Covertframe.iParam[PARAM_MAX_Y]-5,m_Covertframe.iParam[PARAM_MAX_X],m_Covertframe.iParam[PARAM_MAX_Y]+5);
@@ -2223,8 +2324,9 @@ void PlayWidget::paintEvent(QPaintEvent *)
 
 	pixImg.load("bmp/2.bmp");
 	painterImage.drawImage(rect_image,pixImg);
-*/
 
+	pixImg.save("bmp/ttt.jpg");
+*/
 	
 	QPainter painterRect(this);
 

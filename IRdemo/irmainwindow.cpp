@@ -21,11 +21,16 @@ IrMainWindow::IrMainWindow(QWidget *parent): QMainWindow(parent)
 	connect(btn_disconnect,SIGNAL(clicked()),this,SLOT(Disconnect()));
 	connect(btn_calibrate,SIGNAL(clicked()),this,SLOT(Calibrate()));
 	connect(btn_set,SIGNAL(clicked()),this,SLOT(DevSet()));
+	connect(btn_video,SIGNAL(clicked()),this,SLOT(Record()));
 
 	
 	connect(btn_play,SIGNAL(clicked()),playwidget,SLOT(Play()));
 	connect(btn_stop,SIGNAL(clicked()),playwidget,SLOT(Stop()));
 	connect(btn_pic,SIGNAL(clicked()),playwidget,SLOT(GrapPicture()));
+	connect(this,SIGNAL(sigRecord(bool)),playwidget,SLOT(RecordIng(bool)));
+
+	
+
 	connect(cbox_palette,SIGNAL(currentIndexChanged(int)),playwidget,SLOT(FramePalette(int)));
 	connect(brn_draw,SIGNAL(clicked()),playwidget,SLOT(DrawRect()));
 
@@ -44,7 +49,6 @@ int IrMainWindow::Connect()
 	QByteArray ipbyte = ir_ip.toLocal8Bit();
 	char*ip = ipbyte.data();
     IR_Create(0, 30245, ip,pCBFframe, pCBFcmd, (long)(playwidget));
-   // IR_Command(0, COMMAND_PLAY);
 	printf("IR_Create over !\n");
     return 0;
 }
@@ -60,11 +64,26 @@ int IrMainWindow::Disconnect()
 
 int IrMainWindow::Calibrate()
 {
-qDebug()<<"aaaaaaaaaaa bRectTempbRectTempbRectTempbRectTempbRectTempt";
    return  IR_Command(0,COMMAND_CALIBRATE);
-
 }
 
+
+
+
+int IrMainWindow::Record()
+{
+	bool state = btn_video->isChecked();
+	if(state)
+		{
+		btn_video->setText(QString::fromLocal8Bit("输入的中文"));
+		}
+	else
+		{
+	btn_video->setText(QString::fromLocal8Bit("输入的中文"));
+		}
+	 emit sigRecord(state);
+	 return 0;
+}
 
 
 int IrMainWindow::DevSet()
