@@ -1014,7 +1014,10 @@ void TemperatureThread::run()
                             m_rectInfo[it].min =thdFrame.buffer[i + thdFrame.width * j];
                 }
             }
-			parent->lb_obj[it].setText("max:"+QString::number(m_rectInfo[it].max)+"  "+"avg:"+QString::number((m_rectInfo[it].max+m_rectInfo[it].min)/2)+"  "+"min:"+QString::number( m_rectInfo[it].min));
+			QString maxT = QString::number((m_rectInfo[it].max-4000)/10);
+			QString avgT = QString::number((m_rectInfo[it].max+m_rectInfo[it].min-8000)/20);
+			QString minT = QString::number( (m_rectInfo[it].min-4000)/10);
+			parent->lb_obj[it].setText("max:"+maxT+"  "+"avg:"+avgT+"  "+"min:"+minT);
         }
 		mutex.unlock();  
         for(int it=0;it<MAX_OBJ_NUM;it++)
@@ -1048,7 +1051,7 @@ void TemperatureThread::WakeUp(Frame *pTmp,eDrawMode emode)
 		yp = (((float)pTmp->height)/xj);
 		int i = (int)parent->lb_point.x()*xp;
 		int j = (int)parent->lb_point.y()*yp ;
-		parent->lb_point.setText(QString::number(pTmp->buffer[i + thdFrame.width * j]));	
+		parent->lb_point.setText(QString::number(  (pTmp->buffer[i + thdFrame.width * j]-4000)/10  ));	
         /*
 		qDebug()<<"width: "<<pTmp->width;
 		qDebug()<<"height: "<<pTmp->height;
