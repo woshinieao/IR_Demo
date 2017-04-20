@@ -648,7 +648,7 @@ u_int8_t palette[] = {
 };
 */
 
-unsigned char paletteList[] = {
+BYTE paletteList[] = {
 	0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x02, 0x02, 0x02, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x04, 0x04, 0x04, 0x05, 0x05, 0x05, 0x06, 
 	0x06, 0x06, 0x08, 0x08, 0x08, 0x09, 0x09, 0x09, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0B, 0x0B, 0x0B, 0x0C, 0x0C, 0x0C, 0x0D, 0x0D, 0x0D, 0x0F, 0x0F,
 	0x0F, 0x10, 0x10, 0x10, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x12, 0x12, 0x12, 0x13, 0x13, 0x13, 0x14, 0x14, 0x14, 0x16, 0x16, 0x16, 0x17, 0x17, 0x17,
@@ -962,30 +962,35 @@ unsigned char paletteList[] = {
 
 
 
+
 long  FrameCallBack(long lData, long lParam)
 {
 
     PlayWidget* pIRPlayer = (PlayWidget*)lParam;
     if( pIRPlayer->m_play == false)
         return 0;
-	if(pIRPlayer->m_record)
-		memcpy((void *)&pIRPlayer->videoThread.videoFrame,(void *)lData,sizeof(Frame));
+
+
     if(pIRPlayer->mutex_bmp.tryLock())
 	{
+        qDebug()<<"aaaaaaaaaaaaaaaaaaaaaa";
         pIRPlayer->pFrame =(Frame *)lData;
        	pIRPlayer-> FrameRecv((Frame *)lData);
         pIRPlayer->mutex_bmp.unlock();
 	}
+      pIRPlayer->update();
 	return 0;
 
 }
+
+
 
 TemperatureThread::TemperatureThread(void * /*arg*/)
 {
 	for(int it=0;it<MAX_OBJ_NUM;it++)
     {
         m_rectInfo[it].max = 0;
-        m_rectInfo[it].min = 16383;
+        m_rectInfo[it].min = 0xffffff;
         m_rectInfo[it].x = 0;
         m_rectInfo[it].y = 0;
         m_rectInfo[it].w = 0;
@@ -996,14 +1001,15 @@ TemperatureThread::TemperatureThread(void * /*arg*/)
 
 void TemperatureThread::run()
 {
-	PlayWidget *parent = (PlayWidget *)this->parent();
-
+    PlayWidget *parent = (PlayWidget *)this->parent();
 	while(true)
 	{
 		mutex.lock(); 
 		cond.wait(&mutex);
-        for(int it=0;it<parent->m_iObjNum;it++)
+     for(int it=0;it<parent->m_iObjNum;it++)
         {
+         m_rectInfo[it].max = 0;
+         m_rectInfo[it].min = 0xffffff;
             for (int j = m_rectInfo[it].y; j < m_rectInfo[it].y+m_rectInfo[it].h; j++)
             {
                 for (int i = m_rectInfo[it].x; i < m_rectInfo[it].x+m_rectInfo[it].w; i++)
@@ -1014,22 +1020,25 @@ void TemperatureThread::run()
                             m_rectInfo[it].min =thdFrame.buffer[i + thdFrame.width * j];
                 }
             }
-			QString maxT = QString::number((m_rectInfo[it].max-4000)/10);
-			QString avgT = QString::number((m_rectInfo[it].max+m_rectInfo[it].min-8000)/20);
-			QString minT = QString::number( (m_rectInfo[it].min-4000)/10);
-			parent->lb_obj[it].setText("max:"+maxT+"  "+"avg:"+avgT+"  "+"min:"+minT);
+             parent->lb_obj[it].setText(" ");
+            QString maxT = QString::number((m_rectInfo[it].max-4000)/10);
+            QString avgT = QString::number((m_rectInfo[it].max+m_rectInfo[it].min-8000)/20);
+            QString minT = QString::number( (m_rectInfo[it].min-4000)/10);
+            parent->lb_obj[it].setText("max:"+maxT+"  "+"avg:"+avgT+"  "+"min:"+minT);
         }
 		mutex.unlock();  
-        for(int it=0;it<MAX_OBJ_NUM;it++)
+        /*
+        for(int it=0;it<parent->m_iObjNum;it++)
         {
-qDebug()<<"it:"<<it;
-qDebug()<<"m_rectInfo[it].x:"<<m_rectInfo[it].x;
-qDebug()<<"m_rectInfo[it].y:"<<m_rectInfo[it].y;
-qDebug()<<"m_rectInfo[it].w:"<<m_rectInfo[it].w;
-qDebug()<<"m_rectInfo[it].h:"<<m_rectInfo[it].h;
-qDebug()<<"m_rectInfo[it].max:"<<m_rectInfo[it].max;
-qDebug()<<"m_rectInfo[it].min:"<<m_rectInfo[it].min;
+        qDebug()<<"it:"<<it;
+        qDebug()<<"m_rectInfo[it].x:"<<m_rectInfo[it].x;
+         qDebug()<<"m_rectInfo[it].y:"<<m_rectInfo[it].y;
+          qDebug()<<"m_rectInfo[it].w:"<<m_rectInfo[it].w;
+           qDebug()<<"m_rectInfo[it].h:"<<m_rectInfo[it].h;
+  qDebug()<<"m_rectInfo[it].max:"<<m_rectInfo[it].max;
+   qDebug()<<"m_rectInfo[it].min:"<<m_rectInfo[it].min;
         }
+        */
 	}
 }
 
@@ -1051,7 +1060,7 @@ void TemperatureThread::WakeUp(Frame *pTmp,eDrawMode emode)
 		yp = (((float)pTmp->height)/xj);
 		int i = (int)parent->lb_point.x()*xp;
 		int j = (int)parent->lb_point.y()*yp ;
-		parent->lb_point.setText(QString::number(  (pTmp->buffer[i + thdFrame.width * j]-4000)/10  ));	
+        parent->lb_point.setText(QString::number(  (pTmp->buffer[i + thdFrame.width * j]-4000 )/ 10  ));
         /*
 		qDebug()<<"width: "<<pTmp->width;
 		qDebug()<<"height: "<<pTmp->height;
@@ -1087,6 +1096,8 @@ TemperatureThread::~TemperatureThread()
 
 void RecordThread::run()
 {
+
+    /*
 	int i=0;
 	avi_t *out_fd = NULL; 
    	QString video_file = QDate::currentDate().toString("yyyy.MM.dd")+"-"+ QTime::currentTime().toString("hh.mm.ss")+".avi";
@@ -1097,13 +1108,13 @@ void RecordThread::run()
 	if(out_fd!=NULL)
 	{
 		AVI_set_video(out_fd, 640, 480, 50, "MJPG");
-	}
+}
 
 
 
 
 
-	
+
 	while(m_start)
 	{
 	
@@ -1168,7 +1179,7 @@ void RecordThread::run()
 		break;
 	}
 	AVI_close(out_fd);
-
+*/
 }
 
 
@@ -1180,8 +1191,6 @@ PlayWidget::PlayWidget(QWidget *parent)
 {
 
 	connect(&timer,SIGNAL(timeout()),this,SLOT(TimeSecond()));
-
-	connect(&timerTTTTT,SIGNAL(timeout()),this,SLOT(TimeSecondTTTTT()));
 	flag_draw  =DRAW_NO;
 	ctrl_mode = 0;
     bRectTemp = 0;
@@ -1201,8 +1210,8 @@ PlayWidget::PlayWidget(QWidget *parent)
 		label_rect[num] = new  QLabel(R,this,0);
 		label_rect[num]->setAttribute(Qt::WA_TranslucentBackground);
 		label_rect[num]->hide();
-		lb_obj[num].setParent(this);
-		lb_obj[num].hide();
+        lb_obj[num].setParent(this);
+        lb_obj[num].hide();
 	}
 	lb_point.setParent(this);
 	lb_point.setAttribute(Qt::WA_TranslucentBackground);
@@ -1212,20 +1221,11 @@ PlayWidget::PlayWidget(QWidget *parent)
     lbFrameNum->setAttribute(Qt::WA_TranslucentBackground);
     lbFrameNum->hide();
 
-   	tempThread.setParent(this); 
+   tempThread.setParent(this); 
     FrameHeader();
     FramePalette(0);
-/*
-	pTmptttt.height = 480;
-	pTmptttt.width = 640;
-	FILE *fd = fopen("bmp/1.bmp","r");
-	fread((char *)&m_FileInfoheader,1,sizeof(m_FileInfoheader),fd);
-	memcpy(pTmptttt.buffer,m_FileInfoheader.buffer,MAX_COUNT);
-	fclose(fd);
-	tempThread.start();
-	timerTTTTT.start(3000);
-*/
-     	
+
+
 }
 
 int PlayWidget::FrameHeader()
@@ -1715,18 +1715,6 @@ void PlayWidget::TimeSecond()
 void PlayWidget::TimeSecondTTTTT()
 {
 
-    for(int i=0;i<MAX_OBJ_NUM;i++)
-    	{
-    	lb_obj[i].setParent(this);
-	lb_obj[i].show();
-		
-			qDebug()<<"width:"<<this->height();
-
-			qDebug()<<"aa lb_obj:"<<this->height()-((3-i/3)*20);
-	lb_obj[i].setGeometry(100+210*(i%3),this->height()-(3-i/3)*32,200,30 );
-	lb_obj[i].setText("max:"+QString::number(i*110)+"  "+"avg:"+QString::number(i*110)+"  "+"min:"+QString::number(i*110));
-		lb_obj[i].setStyleSheet("background-color: rgb(85, 170, 255)");
-    	}
 //	FrameRecv(&pTmptttt);
 //	update();
 
@@ -1736,7 +1724,6 @@ void PlayWidget::TimeSecondTTTTT()
 int PlayWidget::FrameRecv(Frame* pTmp)
 {
 
-
 	if(pTmp == NULL)
 		return -1;
 	memcpy(pFrame,pTmp,sizeof(Frame));
@@ -1744,6 +1731,7 @@ int PlayWidget::FrameRecv(Frame* pTmp)
 	{
         tempThread.WakeUp(pTmp,flag_draw);
 	}
+
 	USHORT m = 0, n = 16383;
 	for (int j = 0; j < pFrame->height; j++)
 	{
@@ -1798,10 +1786,10 @@ int PlayWidget::FrameRecv(Frame* pTmp)
 	
  */
     FrameConvert();
-    memcpy((void *)&m_Bmpfile,(char *)(&m_FileInfoheader)+2,sizeof(BMPFLIEHEADER)-2);
+    memcpy((void *)&m_Bmpfile,(char *)(&m_FileInfoheader)+2,sizeof(BITMAPINFO)-2);
     memcpy((void *)m_Bmpfile.buffer,(void *)m_Covertframe.buffer,MAX_COUNT);
+ qDebug()<<"111111111111111111111111";
 
-    update();
 	return 0;
 
 }
@@ -1880,20 +1868,20 @@ int PlayWidget::SaveRect()
     for(int i=0;i<m_iObjNum ;i++)
 	{
 
-		lb_obj[i].show();
-		lb_obj[i].setGeometry(50+100*(i%3),this->height()-(3-i/3)*20,100,20 );
-		tempThread.m_rectInfo[i].x	=m_rectObjTemp[i].x()*xp;
-		tempThread.m_rectInfo[i].y =m_rectObjTemp[i].y()*yp;
-		tempThread.m_rectInfo[i].w =m_rectObjTemp[i].width()*xp;
-		tempThread.m_rectInfo[i].h =m_rectObjTemp[i].height()*yp;
+        lb_obj[i].show();
+        lb_obj[i].setGeometry(50+220*(i%3),this->height()-(3-i/3)*20,200,20 );
+        tempThread.m_rectInfo[i].x	=m_rectObjTemp[i].x()*xp;
+        tempThread.m_rectInfo[i].y =m_rectObjTemp[i].y()*yp;
+        tempThread.m_rectInfo[i].w =m_rectObjTemp[i].width()*xp;
+        tempThread.m_rectInfo[i].h =m_rectObjTemp[i].height()*yp;
 
-		qDebug()<<"it:"<<i;
-		qDebug()<<"m_rectInfo[it].x:"<<tempThread.m_rectInfo[i].x;
-		qDebug()<<"m_rectInfo[it].y:"<<tempThread.m_rectInfo[i].y;
-		qDebug()<<"m_rectInfo[it].w:"<<tempThread.m_rectInfo[i].w;
-		qDebug()<<"m_rectInfo[it].h:"<<tempThread.m_rectInfo[i].h;
-		qDebug()<<"m_rectInfo[it].max:"<<tempThread.m_rectInfo[i].max;
-		qDebug()<<"m_rectInfo[it].min:"<<tempThread.m_rectInfo[i].min;
+        qDebug()<<"it:"<<i;
+        qDebug()<<"m_rectInfo[it].x:"<<tempThread.m_rectInfo[i].x;
+        qDebug()<<"m_rectInfo[it].y:"<<tempThread.m_rectInfo[i].y;
+        qDebug()<<"m_rectInfo[it].w:"<<tempThread.m_rectInfo[i].w;
+        qDebug()<<"m_rectInfo[it].h:"<<tempThread.m_rectInfo[i].h;
+        qDebug()<<"m_rectInfo[it].max:"<<tempThread.m_rectInfo[i].max;
+        qDebug()<<"m_rectInfo[it].min:"<<tempThread.m_rectInfo[i].min;
 	}
 	return 0;
 }
@@ -2297,21 +2285,28 @@ if(ctrl_mode != DRAW_MODE)
 
 void PlayWidget::paintEvent(QPaintEvent *)
 {
+     qDebug()<<"22222222222222222222";
     if(m_play == true)
 	{
-		iFps++;
+
+        iFps++;
+        qDebug()<<"bbbbbbbbbbbbbbbbb";
+
 		QPainter painterImage(this);
 		QRect rect_image(0,0,this->width(),this->height());
 		QImage pixImg;
 	    mutex_bmp.lock();
+        qDebug()<<"ccccccccccccccccccccccc";
+
+
 	    pixImg.loadFromData((unsigned char *)&m_Bmpfile,sizeof(BMPFLIE),0);
 		painterImage.drawImage(rect_image,pixImg);
 		if(m_grap)
 		{
-			pixImg.save(m_file);
+            pixImg.save(m_file);
 			m_grap = false;
 		}
-		
+
 		painterImage.setPen(pen);
 	    painterImage.drawLine(m_Covertframe.iParam[PARAM_MAX_X]-5,m_Covertframe.iParam[PARAM_MAX_Y],m_Covertframe.iParam[PARAM_MAX_X]+5,m_Covertframe.iParam[PARAM_MAX_Y]);
 	    painterImage.drawLine(m_Covertframe.iParam[PARAM_MAX_X],m_Covertframe.iParam[PARAM_MAX_Y]-5,m_Covertframe.iParam[PARAM_MAX_X],m_Covertframe.iParam[PARAM_MAX_Y]+5);
@@ -2327,15 +2322,13 @@ void PlayWidget::paintEvent(QPaintEvent *)
 
 	pixImg.load("bmp/2.bmp");
 	painterImage.drawImage(rect_image,pixImg);
-
-	pixImg.save("bmp/ttt.jpg");
 */
-	
+
 	QPainter painterRect(this);
 
 	painterRect.setPen(Qt::red);
 	
-	for(int rectNum = 0;rectNum< MAX_OBJ_NUM;rectNum++)
+    for(int rectNum = 0;rectNum< m_iObjNum;rectNum++)
 	{
 
 		painterRect.drawRect(m_rectObjTemp[rectNum]);

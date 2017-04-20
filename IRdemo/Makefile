@@ -33,7 +33,7 @@ MOVE          = mv -f
 TAR           = tar -cf
 COMPRESS      = gzip -9f
 DISTNAME      = IRdemo1.0.0
-DISTDIR = /home/nieao/samba/IR_Demo/IRdemo/.tmp/IRdemo1.0.0
+DISTDIR = /home/neo/gitcode/IRdemo/.tmp/IRdemo1.0.0
 LINK          = g++
 LFLAGS        = -Wl,-O1 -Wl,-rpath,/opt/Qt5.7.0/5.7/gcc_64/lib
 LIBS          = $(SUBLIBS) -L/opt/Qt5.7.0/5.7/gcc_64/lib -lQt5Widgets -L/usr/lib64 -lQt5Gui -lQt5Core -lGL -lpthread 
@@ -54,8 +54,7 @@ SOURCES       = cmdwidget.cpp \
 		irmainwindow.cpp \
 		IRStream.cpp \
 		main.cpp \
-		playwidget.cpp \
-		avilib.cpp moc_cmdwidget.cpp \
+		playwidget.cpp moc_cmdwidget.cpp \
 		moc_irmainwindow.cpp \
 		moc_playwidget.cpp
 OBJECTS       = cmdwidget.o \
@@ -65,7 +64,6 @@ OBJECTS       = cmdwidget.o \
 		IRStream.o \
 		main.o \
 		playwidget.o \
-		avilib.o \
 		moc_cmdwidget.o \
 		moc_irmainwindow.o \
 		moc_playwidget.o
@@ -224,15 +222,13 @@ DIST          = /opt/Qt5.7.0/5.7/gcc_64/mkspecs/features/spec_pre.prf \
 		IRPalette.h \
 		IRStream.h \
 		playwidget.h \
-		resource.h \
-		avilib.h cmdwidget.cpp \
+		resource.h cmdwidget.cpp \
 		IRConnect.cpp \
 		IRCore.cpp \
 		irmainwindow.cpp \
 		IRStream.cpp \
 		main.cpp \
-		playwidget.cpp \
-		avilib.cpp
+		playwidget.cpp
 QMAKE_TARGET  = IRdemo
 DESTDIR       = 
 TARGET        = IRdemo
@@ -563,8 +559,8 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents cmdwidget.h IRConnect.h IRCore.h irmainwindow.h IRPalette.h IRStream.h playwidget.h resource.h avilib.h $(DISTDIR)/
-	$(COPY_FILE) --parents cmdwidget.cpp IRConnect.cpp IRCore.cpp irmainwindow.cpp IRStream.cpp main.cpp playwidget.cpp avilib.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents cmdwidget.h IRConnect.h IRCore.h irmainwindow.h IRPalette.h IRStream.h playwidget.h resource.h $(DISTDIR)/
+	$(COPY_FILE) --parents cmdwidget.cpp IRConnect.cpp IRCore.cpp irmainwindow.cpp IRStream.cpp main.cpp playwidget.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents cmdwidget.ui irmainwindow.ui $(DISTDIR)/
 
 
@@ -758,7 +754,7 @@ moc_cmdwidget.cpp: ui_cmdwidget.h \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QWidget \
 		cmdwidget.h \
 		/opt/Qt5.7.0/5.7/gcc_64/bin/moc
-	/opt/Qt5.7.0/5.7/gcc_64/bin/moc $(DEFINES) -I/opt/Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++ -I/home/nieao/samba/IR_Demo/IRdemo -I/home/nieao/samba/IR_Demo/IRdemo -I/opt/Qt5.7.0/5.7/gcc_64/include -I/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets -I/opt/Qt5.7.0/5.7/gcc_64/include/QtGui -I/opt/Qt5.7.0/5.7/gcc_64/include/QtCore -I/usr/include/c++/4.8 -I/usr/include/x86_64-linux-gnu/c++/4.8 -I/usr/include/c++/4.8/backward -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include cmdwidget.h -o moc_cmdwidget.cpp
+	/opt/Qt5.7.0/5.7/gcc_64/bin/moc $(DEFINES) -I/opt/Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++ -I/home/neo/gitcode/IRdemo -I/home/neo/gitcode/IRdemo -I/opt/Qt5.7.0/5.7/gcc_64/include -I/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets -I/opt/Qt5.7.0/5.7/gcc_64/include/QtGui -I/opt/Qt5.7.0/5.7/gcc_64/include/QtCore -I/usr/include/c++/4.8 -I/usr/include/x86_64-linux-gnu/c++/4.8 -I/usr/include/c++/4.8/backward -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include cmdwidget.h -o moc_cmdwidget.cpp
 
 moc_irmainwindow.cpp: /opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QMainWindow \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/qmainwindow.h \
@@ -1225,19 +1221,9 @@ moc_irmainwindow.cpp: /opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QMainWindow \
 		IRStream.h \
 		IRConnect.h \
 		IRPalette.h \
-		avilib.h \
-		cmdwidget.h \
-		ui_cmdwidget.h \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QCheckBox \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QGridLayout \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QRadioButton \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QSlider \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QSpacerItem \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QTabWidget \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QTextEdit \
 		irmainwindow.h \
 		/opt/Qt5.7.0/5.7/gcc_64/bin/moc
-	/opt/Qt5.7.0/5.7/gcc_64/bin/moc $(DEFINES) -I/opt/Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++ -I/home/nieao/samba/IR_Demo/IRdemo -I/home/nieao/samba/IR_Demo/IRdemo -I/opt/Qt5.7.0/5.7/gcc_64/include -I/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets -I/opt/Qt5.7.0/5.7/gcc_64/include/QtGui -I/opt/Qt5.7.0/5.7/gcc_64/include/QtCore -I/usr/include/c++/4.8 -I/usr/include/x86_64-linux-gnu/c++/4.8 -I/usr/include/c++/4.8/backward -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include irmainwindow.h -o moc_irmainwindow.cpp
+	/opt/Qt5.7.0/5.7/gcc_64/bin/moc $(DEFINES) -I/opt/Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++ -I/home/neo/gitcode/IRdemo -I/home/neo/gitcode/IRdemo -I/opt/Qt5.7.0/5.7/gcc_64/include -I/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets -I/opt/Qt5.7.0/5.7/gcc_64/include/QtGui -I/opt/Qt5.7.0/5.7/gcc_64/include/QtCore -I/usr/include/c++/4.8 -I/usr/include/x86_64-linux-gnu/c++/4.8 -I/usr/include/c++/4.8/backward -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include irmainwindow.h -o moc_irmainwindow.cpp
 
 moc_playwidget.cpp: /opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QtWidgets \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QtWidgetsDepends \
@@ -1687,10 +1673,9 @@ moc_playwidget.cpp: /opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QtWidgets \
 		IRStream.h \
 		IRConnect.h \
 		IRPalette.h \
-		avilib.h \
 		playwidget.h \
 		/opt/Qt5.7.0/5.7/gcc_64/bin/moc
-	/opt/Qt5.7.0/5.7/gcc_64/bin/moc $(DEFINES) -I/opt/Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++ -I/home/nieao/samba/IR_Demo/IRdemo -I/home/nieao/samba/IR_Demo/IRdemo -I/opt/Qt5.7.0/5.7/gcc_64/include -I/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets -I/opt/Qt5.7.0/5.7/gcc_64/include/QtGui -I/opt/Qt5.7.0/5.7/gcc_64/include/QtCore -I/usr/include/c++/4.8 -I/usr/include/x86_64-linux-gnu/c++/4.8 -I/usr/include/c++/4.8/backward -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include playwidget.h -o moc_playwidget.cpp
+	/opt/Qt5.7.0/5.7/gcc_64/bin/moc $(DEFINES) -I/opt/Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++ -I/home/neo/gitcode/IRdemo -I/home/neo/gitcode/IRdemo -I/opt/Qt5.7.0/5.7/gcc_64/include -I/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets -I/opt/Qt5.7.0/5.7/gcc_64/include/QtGui -I/opt/Qt5.7.0/5.7/gcc_64/include/QtCore -I/usr/include/c++/4.8 -I/usr/include/x86_64-linux-gnu/c++/4.8 -I/usr/include/c++/4.8/backward -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include playwidget.h -o moc_playwidget.cpp
 
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
@@ -2151,8 +2136,7 @@ ui_irmainwindow.h: irmainwindow.ui \
 		IRCore.h \
 		IRStream.h \
 		IRConnect.h \
-		IRPalette.h \
-		avilib.h
+		IRPalette.h
 	/opt/Qt5.7.0/5.7/gcc_64/bin/uic irmainwindow.ui -o ui_irmainwindow.h
 
 compiler_yacc_decl_make_all:
@@ -2803,17 +2787,7 @@ irmainwindow.o: irmainwindow.cpp irmainwindow.h \
 		IRCore.h \
 		IRStream.h \
 		IRConnect.h \
-		IRPalette.h \
-		avilib.h \
-		cmdwidget.h \
-		ui_cmdwidget.h \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QCheckBox \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QGridLayout \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QRadioButton \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QSlider \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QSpacerItem \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QTabWidget \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QTextEdit
+		IRPalette.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o irmainwindow.o irmainwindow.cpp
 
 IRStream.o: IRStream.cpp IRStream.h \
@@ -3287,17 +3261,7 @@ main.o: main.cpp /opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QTextCodec \
 		IRCore.h \
 		IRStream.h \
 		IRConnect.h \
-		IRPalette.h \
-		avilib.h \
-		cmdwidget.h \
-		ui_cmdwidget.h \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QCheckBox \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QGridLayout \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QRadioButton \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QSlider \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QSpacerItem \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QTabWidget \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets/QTextEdit
+		IRPalette.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 playwidget.o: playwidget.cpp playwidget.h \
@@ -3748,12 +3712,8 @@ playwidget.o: playwidget.cpp playwidget.h \
 		IRCore.h \
 		IRStream.h \
 		IRConnect.h \
-		IRPalette.h \
-		avilib.h
+		IRPalette.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o playwidget.o playwidget.cpp
-
-avilib.o: avilib.cpp avilib.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o avilib.o avilib.cpp
 
 moc_cmdwidget.o: moc_cmdwidget.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_cmdwidget.o moc_cmdwidget.cpp

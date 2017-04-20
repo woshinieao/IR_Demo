@@ -7,7 +7,7 @@
 
 
 
-typedef enum eWidgetCommand{
+typedef enum enumCommand{
  msgAutoCal               = 10, //自动补偿
  msgSetBpPos              = 11, //设置坏点位置
  msgAddBp                 = 12, //增加坏点
@@ -152,19 +152,26 @@ typedef enum eWidgetCommand{
 }eCmd;
 
 
+
+
+
+
+
+
+
+
 class CmdWidget:public QWidget,public Ui_CmdWidget
 {
 	Q_OBJECT
 public:
 	CmdWidget(QWidget *parent = 0);	
 	~CmdWidget();
-	void Command();
 	
 signals:
 	
 public slots:
 private:
-	QButtonGroup btnGroup;
+	
 };
 
 

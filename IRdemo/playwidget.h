@@ -12,7 +12,6 @@
 #include <string.h>
 #include "IRCore.h"
 #include "IRPalette.h"
-#include "avilib.h"
 
 #define HIST_SIZE 32768
 #define MAX_OBJ_NUM 9
@@ -65,15 +64,6 @@ typedef struct tagBITMAPINFO {
     BITMAPINFOHEADER bmiHeader; //指定了一个BITMAPINFOHEADER结构，包含了有关设备相关位图的度量和颜色格式的信息
     RGBQUAD          bmiColors[256]; //指定了一个RGBQUAD或DWORD数据类型的数组，定义了位图中的颜色。
 } BITMAPINFO; 
-
-
-
-typedef struct tagBMPFLIEHEADER {	
-	BITMAPFILEHEADER fileheader;
-	BITMAPINFO       info;
-}BMPFLIEHEADER;
-
-
 
 typedef struct tagBMPFILE {	
 	BITMAPFILEHEADER fileheader;
@@ -172,7 +162,7 @@ public:
     CBF_IR pCBFframe;
 	BMPFLIE m_Bmpfile;
     CovertFrame m_Covertframe;
-    BMPFLIEHEADER m_FileInfoheader;
+    BMPFLIE m_FileInfoheader;
     Frame *pFrame;
 	bool m_play;
 	bool m_grap;
@@ -186,7 +176,7 @@ public:
     QLabel lb_obj[MAX_OBJ_NUM];
 	Frame pTmptttt;
     int iFps;
-    int bRectTemp;
+        int bRectTemp;
 	int  m_iObjNum; 
 	TemperatureThread tempThread;
 	RecordThread videoThread;

@@ -21,7 +21,7 @@ IrMainWindow::IrMainWindow(QWidget *parent): QMainWindow(parent)
 	connect(btn_disconnect,SIGNAL(clicked()),this,SLOT(Disconnect()));
 	connect(btn_calibrate,SIGNAL(clicked()),this,SLOT(Calibrate()));
 	connect(btn_set,SIGNAL(clicked()),this,SLOT(DevSet()));
-	connect(btn_video,SIGNAL(clicked()),this,SLOT(Record()));
+//	connect(btn_video,SIGNAL(clicked()),this,SLOT(Record()));
 
 	
 	connect(btn_play,SIGNAL(clicked()),playwidget,SLOT(Play()));
@@ -73,14 +73,7 @@ int IrMainWindow::Calibrate()
 int IrMainWindow::Record()
 {
 	bool state = btn_video->isChecked();
-	if(state)
-		{
-		btn_video->setText(QString::fromLocal8Bit("输入的中文"));
-		}
-	else
-		{
-	btn_video->setText(QString::fromLocal8Bit("输入的中文"));
-		}
+
 	 emit sigRecord(state);
 	 return 0;
 }
@@ -88,7 +81,7 @@ int IrMainWindow::Record()
 
 int IrMainWindow::DevSet()
 {
-	cmdWidget.show();
+//	cmdWidget.show();
 	return 0;
 
 }

@@ -6,7 +6,6 @@
 
 #include "ui_irmainwindow.h"
 #include "IRCore.h"
-#include "cmdwidget.h"
 
 
 class IrMainWindow : public QMainWindow,public Ui_IrMainWindow
@@ -26,15 +25,15 @@ public slots:
 	int Connect();
     int Disconnect();
     int Calibrate();
-	int Record();
 	int DevSet();
-signals:
-	void sigRecord(bool);
+
+    int Record();
+
+   signals:
+ void   sigRecord(bool);
 private:
 
 	QString ir_ip;
-	CmdWidget cmdWidget;
-
    
 
 };
