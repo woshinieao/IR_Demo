@@ -6,7 +6,7 @@
 
 #include "ui_irmainwindow.h"
 #include "IRCore.h"
-
+#include "cmdwidget.h"
 
 class IrMainWindow : public QMainWindow,public Ui_IrMainWindow
 {
@@ -20,20 +20,19 @@ public:
 	friend long CmdCallBack(long lData, long lParam);
 	CBF_IR pCBFcmd;
 	CBF_IR pCBFframe;
+    CBF_IR pCBFconfig;
+    CmdWidget cmdWidget;
 
 public slots:
 	int Connect();
     int Disconnect();
     int Calibrate();
 	int DevSet();
-
     int Record();
-
-   signals:
- void   sigRecord(bool);
 private:
 
 	QString ir_ip;
+	
    
 
 };

@@ -1,7 +1,0 @@
-LIBRARY IRCore
-EXPORTS
-	IR_Create
-	IR_Destroy
-	IR_Command
-	CreateIRStream
-	DestroyIRStream

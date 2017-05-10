@@ -1,6 +1,6 @@
 #include "IRConnect.h"
 
-int CreateConnect(SOCKET* pSocket, int port)
+int CIRConnect::CreateConnect(SOCKET* pSocket, int port, struct sockaddr_in* addr)
 {
 
 #ifdef WIN32
@@ -30,12 +30,12 @@ int CreateConnect(SOCKET* pSocket, int port)
 
 
 
-	*pSocket = socket(AF_INET, SOCK_DGRAM, 0);
-	struct sockaddr_in addrSrv;
-	addrSrv.sin_family = AF_INET;
-	addrSrv.sin_port = htons(port);
-	addrSrv.sin_addr.s_addr = htonl(INADDR_ANY);
-	if (bind(*pSocket, (struct sockaddr *)&addrSrv, sizeof(struct sockaddr_in)) == -1)
+	*pSocket = ::socket(AF_INET, SOCK_DGRAM, 0);
+	addr->sin_family = AF_INET;
+	addr->sin_port = htons(port);
+
+	addr->sin_addr.s_addr = htonl(INADDR_ANY);
+	if (bind(*pSocket, (struct sockaddr *)addr, sizeof(struct sockaddr_in)) == -1)
 		return false;
 	else
 	{
@@ -66,33 +66,42 @@ void *ReceiveProcess(void *lpParameter)
 {
 	CIRConnect* pIRConnect = (CIRConnect*)lpParameter;
 	char recvbuffer[BUFF_LEN];
+	sockaddr_in addrRev;
+	int len = sizeof(sockaddr);
+
 	memset(recvbuffer, 0 , BUFF_LEN);
 	while (pIRConnect->run == true)
 	{
-		if (recv(pIRConnect->socket, recvbuffer, BUFF_LEN, 0) >=0)
+		int retRcv = recvfrom(pIRConnect->socket, recvbuffer, BUFF_LEN, 0, (struct sockaddr *)(&addrRev), (socklen_t*)&len);
+
+		if(retRcv >= 0)
 		{
-			if (pIRConnect->run == true) pIRConnect->callback(recvbuffer, pIRConnect->parameter);
+            if(addrRev.sin_addr.s_addr == pIRConnect->addrfrom.sin_addr.s_addr)//¹ýÂËIP
+			{
+				if (pIRConnect->run == true) pIRConnect->callback(recvbuffer, pIRConnect->parameter);
+			}
+            else sleep(2);
 		}
-		else sleep(1);
+		
 	}
 	return (void *)0;
 }
-
-CIRConnect::CIRConnect(void)
+CIRConnect::CIRConnect(void )
 	: run(false)
 	, parameter(0)
 {
 	callback = NULL;
 	handle = NULL;
-	memset(&address, 0, sizeof(struct sockaddr_in));
+	memset(&addrfrom, 0, sizeof(struct sockaddr_in));
 }
 CIRConnect::~CIRConnect(void)
 {
+	;
 }
 
 bool CIRConnect::Bind(short port, char* ip)
 {
-	return Bind(port, ip, NULL, NULL);
+	return Bind(port, ip, NULL, 0);
 }
 bool CIRConnect::Bind(short port, CBF_IRConnect cbf, long param)
 {
@@ -100,12 +109,12 @@ bool CIRConnect::Bind(short port, CBF_IRConnect cbf, long param)
 }
 bool CIRConnect::Bind(short port, char* ip, CBF_IRConnect cbf, long param)
 {
-	if (!CreateConnect(&socket, port)) return false;
+	if (!CreateConnect(&socket, port,&addSrv)) return false;
 	if (ip)
 	{
-		address.sin_family = AF_INET;
-		address.sin_port = htons(port);
-		address.sin_addr.s_addr = inet_addr(ip);
+        addrfrom.sin_family = AF_INET;
+        addrfrom.sin_port = htons(port);
+        addrfrom.sin_addr.s_addr = inet_addr(ip);
 	}
 	if (cbf)
 	{
@@ -119,16 +128,17 @@ bool CIRConnect::Bind(short port, char* ip, CBF_IRConnect cbf, long param)
 		CloseHandle(handle);
 #else	
 		pthread_t ThreadID;
-	pthread_create(&ThreadID,NULL,ReceiveProcess,NULL);
+    pthread_create(&ThreadID,NULL,ReceiveProcess,this);
 #endif	
 	}
+    //addrfrom = address;
 	return true;
 }
-bool CIRConnect::Send(char* command, int length)
+bool CIRConnect::Send( char* command, int length)
 {
-	if (!address.sin_family) return false;
+	if (!addrfrom.sin_family) return false;
 	int sockflag = sizeof(struct sockaddr_in);
-	sendto(socket, command, length, 0, (struct sockaddr *)&address, sockflag);
+	sendto(socket, command, length, 0, (struct sockaddr *)&addrfrom, sockflag);
 	return true;
 }
 bool CIRConnect::Close()
@@ -140,7 +150,7 @@ bool CIRConnect::Close()
 	if (handle) WaitForSingleObject(handle, 100);
 #else
 	close(socket);
-	socket = NULL;
+	socket = -1;
 #endif	
 	return true;
 }

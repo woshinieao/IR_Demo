@@ -11,7 +11,10 @@
 #include <QMutex>
 #include <string.h>
 #include "IRCore.h"
-#include "IRPalette.h"
+//#include "IRPalette.h"
+#include "cmdwidget.h"
+
+#pragma execution_character_set("utf-8")
 
 #define HIST_SIZE 32768
 #define MAX_OBJ_NUM 9
@@ -30,7 +33,7 @@ typedef enum enumDrawMode
 
 typedef struct BITMAPFILEHEADER  
 {   
-	u_int16_t bfReserved0; //额外加的两字节，为了消除结构体四字节对齐导致的多出两个字节，文件写入时，需要除去开头两字节
+    u_int16_t bfReserved0; //额外加的两字节，为了消除结构体四字节对齐导致的多出两个字节，文件写入时，需要除去开头两字节
     u_int16_t bfType;   
     u_int32_t bfSize;   
     u_int16_t bfReserved1;   
@@ -111,7 +114,7 @@ typedef struct tagRectInfo
 
 typedef long (*CBF_IR)(long lData, long lParam);
 
-//class PlayWidget ;
+class PlayWidget ;
 
 class TemperatureThread:public QThread
 {
@@ -121,7 +124,7 @@ public:
 	 ~TemperatureThread();
 	 void WakeUp(Frame *pTmp,eDrawMode emode);
 	void run();
-
+    PlayWidget *m_parent;
 	Frame thdFrame;
 	tRectInfo  m_rectInfo[MAX_OBJ_NUM];
 
@@ -174,12 +177,13 @@ public:
 	QTimer timerTTTTT;
 	QLabel lb_point;
     QLabel lb_obj[MAX_OBJ_NUM];
+    QString str_obj[MAX_OBJ_NUM];
 	Frame pTmptttt;
     int iFps;
-        int bRectTemp;
+    int bRectTemp; //已经保存rect
 	int  m_iObjNum; 
 	TemperatureThread tempThread;
-	RecordThread videoThread;
+    //RecordThread videoThread;
     friend long FrameCallBack(long lData, long lParam);
 
 public slots:
@@ -232,6 +236,7 @@ private:
 	int flag_width;		//记录图形改变前的宽度
 	int flag_height;		//记录图形改变前的高度
 	int ctrl_mode;
+    int times;
 
 };
 

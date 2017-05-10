@@ -1,4 +1,4 @@
-
+﻿
 #ifndef _IRCORE_H
 #define _IRCORE_H
 
@@ -19,8 +19,9 @@
 
 #include "IRStream.h"
 
-IR_API long IR_Create(long handle, int port, char* ip = NULL, CBF_IR cbf_stm = NULL, CBF_IR cbf_cmd = NULL, long param = 0);
-IR_API long IR_Command(long handle, eCommand command);
+IR_API long IR_Create(long handle, int port, char* ip = NULL, CBF_IR cbf_stm = NULL, CBF_IR cbf_cmd = NULL, CBF_IR cbf_cfg = NULL, long param = 0);
+IR_API long IR_Command(long handle, int command, int param);
+IR_API long IR_Send(long handle,char *command, int len);
 IR_API long IR_Destroy(long handle);
 IR_API long IR_Inqure(long handle);
 

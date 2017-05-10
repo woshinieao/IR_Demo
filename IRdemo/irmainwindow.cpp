@@ -1,19 +1,17 @@
 #include "irmainwindow.h"
 
-
 long CmdCallBack(long lData, long lParam)
 {
-
 	return 0;
 }
 
 IrMainWindow::IrMainWindow(QWidget *parent): QMainWindow(parent)
 {
     setupUi(this); 
-
 	
 	pCBFcmd = &CmdCallBack;
     pCBFframe = playwidget->pCBFframe;
+    pCBFconfig = cmdWidget.pCBFconfig;
 	cbox_palette->setIconSize(QSize(90,20));
     cbox_palette->setSizeAdjustPolicy(QComboBox::AdjustToContents);
 	
@@ -22,14 +20,11 @@ IrMainWindow::IrMainWindow(QWidget *parent): QMainWindow(parent)
 	connect(btn_calibrate,SIGNAL(clicked()),this,SLOT(Calibrate()));
 	connect(btn_set,SIGNAL(clicked()),this,SLOT(DevSet()));
 //	connect(btn_video,SIGNAL(clicked()),this,SLOT(Record()));
-
 	
 	connect(btn_play,SIGNAL(clicked()),playwidget,SLOT(Play()));
 	connect(btn_stop,SIGNAL(clicked()),playwidget,SLOT(Stop()));
 	connect(btn_pic,SIGNAL(clicked()),playwidget,SLOT(GrapPicture()));
-	connect(this,SIGNAL(sigRecord(bool)),playwidget,SLOT(RecordIng(bool)));
-
-	
+    //connect(this,SIGNAL(sigRecord(bool)),playwidget,SLOT(RecordIng(bool)));
 
 	connect(cbox_palette,SIGNAL(currentIndexChanged(int)),playwidget,SLOT(FramePalette(int)));
 	connect(brn_draw,SIGNAL(clicked()),playwidget,SLOT(DrawRect()));
@@ -48,8 +43,9 @@ int IrMainWindow::Connect()
 	ir_ip=le_ip->text();
 	QByteArray ipbyte = ir_ip.toLocal8Bit();
 	char*ip = ipbyte.data();
-    IR_Create(0, 30245, ip,pCBFframe, pCBFcmd, (long)(playwidget));
-	printf("IR_Create over !\n");
+  IR_Create(0, 30475, ip,pCBFframe, pCBFcmd, pCBFconfig, (long)(this));
+    //IR_Cmd(0,*(m_cmd+COMMAND_CONNECT),14*sizeof(char));
+ IR_Command(0,usr_Connect,1);
     return 0;
 }
 
@@ -64,7 +60,7 @@ int IrMainWindow::Disconnect()
 
 int IrMainWindow::Calibrate()
 {
-   return  IR_Command(0,COMMAND_CALIBRATE);
+    return	IR_Command(0, usr_Cal,1);
 }
 
 
@@ -72,16 +68,16 @@ int IrMainWindow::Calibrate()
 
 int IrMainWindow::Record()
 {
-	bool state = btn_video->isChecked();
+//	bool state = btn_video->isChecked();
 
-	 emit sigRecord(state);
+//	 emit sigRecord(state);
 	 return 0;
 }
 
 
 int IrMainWindow::DevSet()
 {
-//	cmdWidget.show();
+  cmdWidget.show();
 	return 0;
 
 }

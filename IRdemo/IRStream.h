@@ -16,7 +16,7 @@
 
 #define IR_API 
 
-#define MAX_WIDTH	640
+#define MAX_WIDTH	    640
 #define MAX_HEIGHT	480
 #define MAX_COUNT	MAX_WIDTH * MAX_HEIGHT*2
 
@@ -37,14 +37,15 @@ typedef uint8_t  UINT8;
 typedef uint16_t UINT16;
 typedef uint32_t UINT32;
 
-
-typedef enum enumCommand
+typedef enum enumMessage
 {
-	COMMAND_PLAY,
-	COMMAND_STOP,
-	COMMAND_CALIBRATE,
-	COMMAND_CONNECT,
-} eCommand;
+    usr_Cal   =  73,
+    usr_Play = 1000,
+    usr_Connect = 209,
+//    msgCal   =  4159,
+//    msgPlay = 4502,
+//    msgConnect = 4469,
+} eMessage;
 
 typedef struct tagFrame
 {
@@ -69,19 +70,22 @@ public:
 	CIRStream(void);
 	virtual ~CIRStream(void);
 	virtual bool Init(int port, CBF_IR cbf, long param = 0);
-	virtual bool Init(int port, char* ip, CBF_IR cbf_stm, CBF_IR cbf_cmd, long param = 0);
-	virtual bool Command(eCommand command);
-	virtual bool Command( char* command, int length);
+    virtual bool Init(int port, char* ip, CBF_IR cbf_stm, CBF_IR cbf_cmd, CBF_IR cbf_cfg, long param = 0);
+    virtual bool Command( int cmd, int param);
+    virtual bool Send( char* command, int length);
+   virtual bool Config( char* command, int length);
 	virtual IpAddr IpAddrInqure();
 
 	UINT8  u8SensorType;
 	Frame* pFrame;
 	CBF_IR StreamCallback;
 	CBF_IR CommandCallback;
+    CBF_IR ConfigCallback;
 	long parameter;
 	IpAddr		ipAddrInfo;
 protected:
 	CIRConnect* pIRConnect;
 	CIRConnect* pIRCommand;
+    CIRConnect* pIRConfig;
 };
 

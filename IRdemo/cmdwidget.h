@@ -3,11 +3,12 @@
 
 
 #include "ui_cmdwidget.h"
+#include "IRCore.h"
+#include "qglobal.h"
 
+#pragma execution_character_set("utf-8")
 
-
-
-typedef enum enumCommand{
+typedef enum Command{
  msgAutoCal               = 10, //自动补偿
  msgSetBpPos              = 11, //设置坏点位置
  msgAddBp                 = 12, //增加坏点
@@ -127,6 +128,8 @@ typedef enum enumCommand{
 
  msgDigitalVideoSw        = 1000,//数字视频开关
 
+
+
  user_msgMenuDisable      = 0x0192,
  user_msgCal              = 0x0202,
  user_msgAGCMode          = 0x011F,
@@ -152,13 +155,13 @@ typedef enum enumCommand{
 }eCmd;
 
 
-
-
-
-
-
-
-
+typedef enum eButton{
+    //user define
+    msgSendCmd = 8000,
+    msgView = 8001,
+    msgSend = 8002,
+    msgRecFileInc = 8003,
+}eBtn;
 
 class CmdWidget:public QWidget,public Ui_CmdWidget
 {
@@ -166,12 +169,23 @@ class CmdWidget:public QWidget,public Ui_CmdWidget
 public:
 	CmdWidget(QWidget *parent = 0);	
 	~CmdWidget();
-	
+    friend long  ConfigCallBack(long lData, long lParam);
+    QButtonGroup btnGroup;
+    CBF_IR pCBFconfig;
 signals:
-	
+    void sigRecv(QString);
 public slots:
+	void IRCommand(int);
+    void RecvMsg(QString);
 private:
-	
+	char cmdStr[14];
+    BOOL IsSendFile; //send file flag
+    BOOL IsFileIncDone;//send fileinc flag
+    void SendCommand(quint32 Cmd, quint32 Param);
+    void SendCommandEx(quint32 u32Cmd,  quint8 * pBuff);
+    void SendFile(const char * FilePath);
+    void Delay(quint32 u32Delayms);
+    int GetNum(char* str);
 };
 
 
