@@ -10,11 +10,12 @@
 #include <QDebug>
 #include <QMutex>
 #include <string.h>
-#include "IRCore.h"
+#include "IRSDK.h"
+
 //#include "IRPalette.h"
 #include "cmdwidget.h"
 
-#pragma execution_character_set("utf-8")
+
 
 #define HIST_SIZE 32768
 #define MAX_OBJ_NUM 9
@@ -173,15 +174,20 @@ public:
 	
 	QString m_file;
     QTimer timer;
-
 	QTimer timerTTTTT;
-	QLabel lb_point;
+	QLabel lb_point[MAX_OBJ_NUM];
     QLabel lb_obj[MAX_OBJ_NUM];
     QString str_obj[MAX_OBJ_NUM];
+	
 	Frame pTmptttt;
     int iFps;
     int bRectTemp; //已经保存rect
-	int  m_iObjNum; 
+	int  m_iObjNum;
+	int  m_iPointNum;
+	int m_width;
+	int m_height;
+	float xp,yp;
+    float xi,xj;
 	TemperatureThread tempThread;
     //RecordThread videoThread;
     friend long FrameCallBack(long lData, long lParam);
@@ -228,6 +234,7 @@ private:
     QLabel *lbFrameNum;
 	QRect  m_rectObjTemp[MAX_OBJ_NUM];
 	QRect  m_rectObj[MAX_OBJ_NUM];
+	QPoint  m_pointObj[MAX_OBJ_NUM];
 	QPoint before_pos; 		     //记录鼠标初始位置
 	QPoint current_pos; 		  //记录鼠标当前位置
 

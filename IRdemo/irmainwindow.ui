@@ -78,7 +78,7 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>130</width>
+                 <width>98</width>
                  <height>292</height>
                 </rect>
                </property>
@@ -158,8 +158,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>144</width>
-                 <height>259</height>
+                 <width>138</width>
+                 <height>302</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -248,7 +248,7 @@
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>logo/Palette0.png</normaloff>logo/Palette0.png</iconset>
+                <normaloff>Palette0.png</normaloff>Palette0.png</iconset>
               </property>
              </item>
              <item>
@@ -257,7 +257,7 @@
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>logo/Palette1.png</normaloff>logo/Palette1.png</iconset>
+                <normaloff>Palette1.png</normaloff>Palette1.png</iconset>
               </property>
              </item>
              <item>
@@ -266,7 +266,7 @@
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>logo/Palette2.png</normaloff>logo/Palette2.png</iconset>
+                <normaloff>Palette3.png</normaloff>Palette3.png</iconset>
               </property>
              </item>
              <item>
@@ -275,7 +275,7 @@
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>logo/Palette3.png</normaloff>logo/Palette3.png</iconset>
+                <normaloff>Palette3.png</normaloff>Palette3.png</iconset>
               </property>
              </item>
              <item>
@@ -284,7 +284,7 @@
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>logo/Palette4.png</normaloff>logo/Palette4.png</iconset>
+                <normaloff>Palette4.png</normaloff>Palette4.png</iconset>
               </property>
              </item>
              <item>
@@ -293,7 +293,7 @@
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>logo/Palette5.png</normaloff>logo/Palette5.png</iconset>
+                <normaloff>Palette5.png</normaloff>Palette5.png</iconset>
               </property>
              </item>
              <item>
@@ -302,7 +302,7 @@
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>logo/Palette6.png</normaloff>logo/Palette6.png</iconset>
+                <normaloff>Palette6.png</normaloff>Palette6.png</iconset>
               </property>
              </item>
              <item>
@@ -311,7 +311,7 @@
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>logo/Palette7.png</normaloff>logo/Palette7.png</iconset>
+                <normaloff>Palette7.png</normaloff>Palette7.png</iconset>
               </property>
              </item>
              <item>
@@ -320,7 +320,7 @@
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>logo/Palette8.png</normaloff>logo/Palette8.png</iconset>
+                <normaloff>Palette8.png</normaloff>Palette8.png</iconset>
               </property>
              </item>
             </widget>
@@ -340,7 +340,7 @@
      <x>0</x>
      <y>0</y>
      <width>1053</width>
-     <height>22</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>

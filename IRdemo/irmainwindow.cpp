@@ -43,9 +43,9 @@ int IrMainWindow::Connect()
 	ir_ip=le_ip->text();
 	QByteArray ipbyte = ir_ip.toLocal8Bit();
 	char*ip = ipbyte.data();
-  IR_Create(0, 30475, ip,pCBFframe, pCBFcmd, pCBFconfig, (long)(this));
+  IRSDK_Create(0, 30475, ip,pCBFframe, pCBFcmd, pCBFconfig, (long)(this));
     //IR_Cmd(0,*(m_cmd+COMMAND_CONNECT),14*sizeof(char));
- IR_Command(0,usr_Connect,1);
+ IRSDK_Command(0,USR_CONNECT,1);
     return 0;
 }
 
@@ -60,7 +60,7 @@ int IrMainWindow::Disconnect()
 
 int IrMainWindow::Calibrate()
 {
-    return	IR_Command(0, usr_Cal,1);
+    return	IRSDK_Command(0, USR_CAL,1);
 }
 
 

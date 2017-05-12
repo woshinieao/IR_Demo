@@ -2,6 +2,8 @@
 #include "palette.h"
 #include<stdio.h>
 #include "irmainwindow.h"
+
+
 long  FrameCallBack(long lData, long lParam)
 {
 
@@ -53,9 +55,10 @@ void TemperatureThread::run()
                             m_rectInfo[it].min =thdFrame.buffer[i + thdFrame.width * j];
                 }
             }
-            QString maxT = QString::number((m_rectInfo[it].max-4000)/10);
-            QString avgT = QString::number((m_rectInfo[it].max+m_rectInfo[it].min-8000)/20);
-            QString minT = QString::number( (m_rectInfo[it].min-4000)/10);
+            QString maxT = QString::number((m_rectInfo[it].max-4000)/10,'f',2);
+            QString avgT = QString::number((m_rectInfo[it].max+m_rectInfo[it].min-8000)/20,'f',2);
+            QString minT = QString::number( (m_rectInfo[it].min-4000)/10.0,'f',2);
+			
             m_parent->str_obj[it] = "max:"+maxT+"  "+"avg:"+avgT+"  "+"min:"+minT;
         }
         mutex.unlock();
@@ -84,15 +87,18 @@ void TemperatureThread::WakeUp(Frame *pTmp,eDrawMode emode)
 
         float xp,yp;
         float xi,xj;
-
-        position = m_parent->lb_point.pos();
-        xi = (float)(m_parent->width());
+		xi = (float)(m_parent->width());
         xj = (float)(m_parent->height());
+
+	for(int t=0;t<m_parent->m_iPointNum;t++)
+	{
+        position = m_parent->lb_point[t].pos();
         xp = (((float)pTmp->width)/xi);
         yp = (((float)pTmp->height)/xj);
-        int i = (int)m_parent->lb_point.x()*xp;
-        int j = (int)m_parent->lb_point.y()*yp ;
-       m_parent->lb_point.setText(QString::number(  (pTmp->buffer[i + thdFrame.width * j]-4000 )/ 10  ));
+        int i = (int)m_parent->lb_point[t].x()*xp;
+        int j = (int)m_parent->lb_point[t].y()*yp ;
+      	m_parent->lb_point[t].setText(QString::number(  (pTmp->buffer[i + thdFrame.width * j]-4000 )/ 10.0 ,'f', 2 ));
+	}
         /*
         qDebug()<<"width: "<<pTmp->width;
         qDebug()<<"height: "<<pTmp->height;
@@ -233,8 +239,11 @@ PlayWidget::PlayWidget(QWidget *parent)
     bRectTemp = 0;
     iFps = 0;
     m_iObjNum = 0;
+	m_iPointNum =0;
     m_record = false;
     times = 0;
+	m_width=640;
+	m_height=480;
 
     pen.setWidth(3);
     pen.setColor(Qt::red);
@@ -250,10 +259,11 @@ PlayWidget::PlayWidget(QWidget *parent)
         lb_obj[num].setParent(this);
         lb_obj[num].hide();
         str_obj[num] =" ";
+		 lb_point[num].setParent(this);
+    	lb_point[num].setAttribute(Qt::WA_TranslucentBackground);
+    	lb_point[num].hide();
     }
-    lb_point.setParent(this);
-    lb_point.setAttribute(Qt::WA_TranslucentBackground);
-    lb_point.hide();
+   
 
     lbFrameNum = new  QLabel(this);
     lbFrameNum->setAttribute(Qt::WA_TranslucentBackground);
@@ -272,13 +282,13 @@ int PlayWidget::FrameHeader()
 {
 
     m_FileInfoheader.fileheader.bfType = 'M' << 8 | 'B';
-    m_FileInfoheader.fileheader.bfSize = 54 + 256 * 4 +MAX_WIDTH* MAX_HEIGHT;
+    m_FileInfoheader.fileheader.bfSize = 0;
     m_FileInfoheader.fileheader.bfReserved1 = 0;
     m_FileInfoheader.fileheader.bfReserved2 = 0;
     m_FileInfoheader.fileheader.bfOffBits = sizeof(BITMAPFILEHEADER)-2 + sizeof(BITMAPINFO); //��ȥ2����Ϊ�ṹ��BITMAPFILEHEADER �п�ͷ���������ֽ�
     m_FileInfoheader.info.bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
-    m_FileInfoheader.info.bmiHeader.biWidth         = MAX_WIDTH;
-    m_FileInfoheader.info.bmiHeader.biHeight        = -MAX_HEIGHT;
+    m_FileInfoheader.info.bmiHeader.biWidth         = 0;
+    m_FileInfoheader.info.bmiHeader.biHeight        = 0;
     m_FileInfoheader.info.bmiHeader.biPlanes        = 1;
     m_FileInfoheader.info.bmiHeader.biBitCount      = 8;
     m_FileInfoheader.info.bmiHeader.biCompression   = 0;
@@ -744,6 +754,10 @@ int PlayWidget::FrameConvert()
 
 void PlayWidget::TimeSecond()
 {
+	xi = (float)(this->width());
+    xj = (float)(this->height());
+    xp = (((float)m_width)/xi);
+    yp = (((float)m_height)/xj);
        times++;
     if(times == 4)
     {
@@ -773,8 +787,10 @@ int PlayWidget::FrameRecv(Frame* pTmp)
 
     if(pTmp == NULL)
         return -1;
-       iFps++;
+    iFps++;
     memcpy(pFrame,pTmp,sizeof(Frame));
+	m_width=pFrame->width;
+	m_height=pFrame->height;
     if( iFps%5 == 0 &&( bRectTemp == 1 || flag_draw == DRAW_POINT))
     {
 
@@ -809,33 +825,13 @@ int PlayWidget::FrameRecv(Frame* pTmp)
         m_iSum[PARAM_MAX_TEMP] = m_iParam[PARAM_MAX_TEMP];
         m_iSum[PARAM_MIN_TEMP] = m_iParam[PARAM_MIN_TEMP];
 
-/*
-        //ˢ��
-        if(m_iRecv == m_iFps) //����ˢ��һ��
-        {
-            m_Covertframe.iParam[PARAM_FPA_TEMP] = m_iSum[PARAM_FPA_TEMP]/m_iRecv;
-            m_Covertframe.iParam[PARAM_CEN_TEMP] = m_iSum[PARAM_CEN_TEMP]/m_iRecv;
-            m_Covertframe.iParam[PARAM_MAX_TEMP] = m_iSum[PARAM_MAX_TEMP]/m_iRecv;
-            m_Covertframe.iParam[PARAM_MIN_TEMP] = m_iSum[PARAM_MIN_TEMP]/m_iRecv;
-            m_iRecv = 0;
-            m_iSum[PARAM_FPA_TEMP] = 0;
-            m_iSum[PARAM_CEN_TEMP] = 0;
-            m_iSum[PARAM_MAX_TEMP] = 0;
-            m_iSum[PARAM_MIN_TEMP] = 0;
-        }
-        else if(m_iRecv > m_iFps)
-        {
-            m_iRecv = 0;
-            m_iSum[PARAM_FPA_TEMP] = 0;
-            m_iSum[PARAM_CEN_TEMP] = 0;
-            m_iSum[PARAM_MAX_TEMP] = 0;
-            m_iSum[PARAM_MIN_TEMP] = 0;
-        }
 
- */
     FrameConvert();
-    memcpy((void *)&m_Bmpfile,(char *)(&m_FileInfoheader)+2,sizeof(BITMAPINFO)-2);
-    memcpy((void *)m_Bmpfile.buffer-2,(void *)m_Covertframe.buffer,MAX_COUNT);
+	m_FileInfoheader.fileheader.bfSize = 54 + 256 * 4 +m_width* m_height;
+	m_FileInfoheader.info.bmiHeader.biWidth         = m_width;
+    m_FileInfoheader.info.bmiHeader.biHeight        = -m_height;
+    memcpy((char*)&m_Bmpfile+2,(char *)(&m_FileInfoheader)+2,sizeof(BITMAPINFO)-2);
+    memcpy((void *)m_Bmpfile.buffer,(void *)m_Covertframe.buffer,MAX_COUNT);
 
     update();
     return 0;
@@ -864,7 +860,7 @@ int PlayWidget::RecordIng(bool starting)
 
 int PlayWidget::Play()
 {
-    IR_Command(0, usr_Play, 1);
+    IRSDK_Command(0, USR_PLAY, 1);
 
     m_play = true;
     lbFrameNum->setGeometry(10,5,50,30 );
@@ -877,7 +873,7 @@ int PlayWidget::Play()
 
 int PlayWidget::Stop()
 {
-    IR_Command(0, usr_Play, 0);
+    IRSDK_Command(0, USR_PLAY, 0);
     //m_play = false;
     return 0;
 }
@@ -901,13 +897,9 @@ int PlayWidget::SaveRect()
     bRectTemp = 1;
     flag_draw = DRAW_NO;
 
-    float xp,yp;
-    float xi,xj;
-    xi = (float)(this->width());
-    xj = (float)(this->height());
-    xp = (((float)pFrame->width)/xi);
-    yp = (((float)pFrame->height)/xj);
 
+	
+ 
     for(int i=0;i<m_iObjNum ;i++)
     {
 
@@ -941,9 +933,12 @@ int PlayWidget::CleanRect()
         tempThread.m_rectInfo[i].w = 0;
         tempThread.m_rectInfo[i].h = 0;
         label_rect[i]->hide();
-            lb_obj[i].setText(" ");
+        lb_obj[i].setText(" ");
+		lb_point[i].hide();
+		lb_point[i].setText(" ");
     }
     m_iObjNum = 0;
+	m_iPointNum=0;
     bRectTemp = 0;
     flag_draw = DRAW_NO;
     update();
@@ -952,9 +947,10 @@ int PlayWidget::CleanRect()
 
 int PlayWidget::PointTemperature()
 {
-
+	if(m_iPointNum>9)
+		return 0;
     flag_draw = DRAW_POINT;
-    lb_point.show();
+    //lb_point.show();
     return 0;
 
 }
@@ -979,9 +975,10 @@ if(ctrl_mode != DRAW_MODE)
         else if(flag_draw == DRAW_POINT)
         {
 
-            lb_point.show();
-            lb_point.setGeometry(event->pos().x() ,event->pos().y()-20 ,50,30 );
-            lb_point.setText(QString::number(event->pos().x())+":"+QString::number(event->pos().y()));
+            lb_point[m_iPointNum].show();
+			 m_iPointNum++;
+            lb_point[m_iPointNum].setGeometry(event->pos().x() ,event->pos().y()-20 ,50,30 );
+            //lb_point.setText(QString::number(event->pos().x())+":"+QString::number(event->pos().y()));
 
         }
         else
@@ -1082,7 +1079,7 @@ if(ctrl_mode != DRAW_MODE)
         }
         else if(flag_draw == DRAW_POINT)
         {
-            lb_point.setGeometry(event->pos().x() ,event->pos().y()-20,50,30 );
+            lb_point[m_iPointNum-1].setGeometry(event->pos().x() ,event->pos().y()-20,50,30 );
         //	lb_point.setText(QString::number(event->pos().x())+":"+QString::number(event->pos().y()));
 
         }
@@ -1161,7 +1158,7 @@ if(ctrl_mode != DRAW_MODE)
 
 
 
-void PlayWidget::mouseReleaseEvent(QMouseEvent* /*event*/)		//����ͼ�����Ǹı���С���ƶ���rect��������Ϊ����
+void PlayWidget::mouseReleaseEvent(QMouseEvent* event)		//����ͼ�����Ǹı���С���ƶ���rect��������Ϊ����
 {
 
 if(ctrl_mode != DRAW_MODE)
@@ -1239,8 +1236,11 @@ if(ctrl_mode != DRAW_MODE)
     }
     else if(flag_draw == DRAW_POINT)
     {
-        lb_point.setText(" ");
-        lb_point.hide();
+       // lb_point.setText(" ");
+       // lb_point.hide();
+       lb_point[m_iPointNum-1].setGeometry(event->pos().x() ,event->pos().y()-20 ,50,30 );
+        m_pointObj[m_iPointNum-1].setX(event->pos().x()) ;
+		m_pointObj[m_iPointNum-1].setY(event->pos().y()) ;
         update();
 
     }
@@ -1337,7 +1337,7 @@ void PlayWidget::paintEvent(QPaintEvent *)
         QRect rect_image(0,0,this->width(),this->height());
         QImage pixImg;
         mutex_bmp.lock();
-        pixImg.loadFromData((unsigned char *)&m_Bmpfile,sizeof(BMPFLIE),0);
+        pixImg.loadFromData((unsigned char *)&m_Bmpfile+2,sizeof(BMPFLIE),0);
         painterImage.drawImage(rect_image,pixImg);
         if(m_grap)
         {

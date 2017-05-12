@@ -16,9 +16,7 @@
 
 #define IR_API 
 
-#define MAX_WIDTH	    640
-#define MAX_HEIGHT	480
-#define MAX_COUNT	MAX_WIDTH * MAX_HEIGHT*2
+#define MAX_COUNT	(640*500*2)
 
 
 #define NEED_CHECKSUM	1
@@ -37,15 +35,7 @@ typedef uint8_t  UINT8;
 typedef uint16_t UINT16;
 typedef uint32_t UINT32;
 
-typedef enum enumMessage
-{
-    usr_Cal   =  73,
-    usr_Play = 1000,
-    usr_Connect = 209,
-//    msgCal   =  4159,
-//    msgPlay = 4502,
-//    msgConnect = 4469,
-} eMessage;
+
 
 typedef struct tagFrame
 {

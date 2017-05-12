@@ -5,7 +5,7 @@
 #include <QtWidgets/QPushButton>
 
 #include "ui_irmainwindow.h"
-#include "IRCore.h"
+#include "IRSDK.h"
 #include "cmdwidget.h"
 
 class IrMainWindow : public QMainWindow,public Ui_IrMainWindow

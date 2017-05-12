@@ -1,7 +1,7 @@
 
 #include "playwidget.h"
 #include "cmdwidget.h"
-#include "IRCore.h"
+
 #include <QFileDialog>
 #include "irmainwindow.h"
 long  ConfigCallBack(long lData, long lParam)
@@ -39,7 +39,7 @@ int CmdWidget::GetNum(char *str)
 //send len is 4
 void CmdWidget::SendCommand(uint u32Cmd, uint u32Param)
 {
-    IR_Command(0, u32Cmd, u32Param);
+    IRSDK_Command(0, u32Cmd, u32Param);
 }
 
 void CmdWidget::SendCommandEx(uint u32Cmd,  quint8 * pBuff)
@@ -62,7 +62,7 @@ void CmdWidget::SendCommandEx(uint u32Cmd,  quint8 * pBuff)
 
            memcpy(&(u8Send[10]), pBuff, u16Len);
 
-          IR_Send(0, u8Send, (u16Len+10) * sizeof(char));
+          IRSDK_Send(0, u8Send, (u16Len+10) * sizeof(char));
 }
 
 void CmdWidget::SendFile(const char * FilePath)
